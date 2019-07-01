@@ -24,6 +24,14 @@ SCREEN_H = TILE_H * CHAR_H
 # i.e., the player has to be drawn above grass
 zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
 
+# I made a way to add foreground and background colors to entitities easily
+# i'll call it "Color notation" here
+# It works as follows:
+#   - A colored tile is represented by a string
+#   - The string has the format [foreground[:background]:]character
+#   - Examples:
+#       - R:@ = Red "@"
+#       - B:G:w = Blue "w" with a green background
 
 COLOR_MAP = {
     "0": (0,0,0),
@@ -55,6 +63,7 @@ update_mode()
 sheet = spritesheets.spritesheet('tileset.png') # Load the sheet
 backdrop = pygame.Rect(0, 0, SCREEN_W, SCREEN_H)
 
+# Gets the surface in the tileset for a specific character
 def get_surf(pos, fgcol = 'W', bgcol = '0'):
     if type(pos) == str:
         pos = ord(pos)
@@ -69,11 +78,13 @@ def get_surf(pos, fgcol = 'W', bgcol = '0'):
     del arr
     return surf
 
+# Prints a character at a tile
 def blit_char_at(char, tx, ty, fgcol = 'W', bgcol = '0'):
     global screen
     rect = pygame.Rect(tx * TILE_W, ty * TILE_H, TILE_W, TILE_H)
     screen.blit(get_surf(char,fgcol,bgcol), rect)
 
+# Calls blit_char_at, but uses color notation
 def char_notation_blit(col, tx, ty):
     global screen
     k = col.split(':')
@@ -84,6 +95,7 @@ def char_notation_blit(col, tx, ty):
     elif len(k) == 3:
         blit_char_at(k[2],tx,ty,k[0], k[1])
     return True
+
 @autoclass
 class Entity:
     def __init__(self, char = ' ', x = 0, y = 0, z = 0, passable = False, draw_index = 0):
@@ -99,6 +111,7 @@ class Entity:
         zindex_buf[self.x][self.z] = self.draw_index
         char_notation_blit(self.char, self.x, self.z)
 
+# Makes a grass entity
 def Grass(x,y,z):
     ch = random.choice([',','\'','"'])
     ch = 'G:0:' + ch
