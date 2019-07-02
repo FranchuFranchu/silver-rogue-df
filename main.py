@@ -13,12 +13,15 @@ IS_FULLSCREEN = False
 
 TILE_W = 12 # Tile size, in pixels
 TILE_H = 12
-CHAR_W = 48 # Screen size, in tiles
+CHAR_W = 18 # Screen size, in tiles
 CHAR_H = 18    
 
 # Screen size, in pixels
 SCREEN_W = TILE_W * CHAR_W
 SCREEN_H = TILE_H * CHAR_H
+
+# If the player should move when an arrow key is held
+MOVE_WHEN_HELD = False
 
 # this is a 2-dimensional array for the z-index of things:
 # i.e., the player has to be drawn above grass
@@ -44,18 +47,42 @@ COLOR_MAP = {
     "W": (255,255,255)
 }
 
-SPRT_RECT_X = 12 * 4  
-SPRT_RECT_Y = 12 * 4
-# This is where the sprite is found on the sheet
+# Class for the map, works like a set/dict and iterator
+class Map:
+    def __init__(self, entity_list):
+        self.d = {}
+        for i in entity_list:
+            self.d[i.x,i.y,i.z] = i
+    def add(self, *items):
+        for i in items:
+            self.d[i.x,i.y,i.z] = i
+    def __contains__(self,*items):
+        for i in items:
+            if type(i) == tuple:
+                if len(i) == 3:
+                    return self.d.has_key(i.x,i.y,i.z)
+            else:
+                return self.d[i.x,i.y,i.z] == i
+    has = __contains__
+    def __getitem__(self,item):
+        if type(item) == tuple:
+            if len(item) == 3:
+                return self.d.get((item[0],item[1],item[2]))
 
-LEN_SPRT_X = 12
-LEN_SPRT_Y = 12
-# This is the length of the sprite
+    def remove(self,*items):
+        for i in items:
+            del self.d[i.x,i.y,i.z]
+
+    def __iter__(self):
+        self.i = iter(self.d.values())
+        return self.i
+    def __next__(self):
+        return self.i.__next__()
 screen = None
 def update_mode():
     global screen
     flags = RESIZABLE
-    flags |= FULLSCREEN if IS_FULLSCREEN else 0
+    flags |= pygame.FULLSCREEN if IS_FULLSCREEN else 0
     screen = pygame.display.set_mode((SCREEN_H, SCREEN_W), flags) # Create the screen
 
 update_mode()
@@ -98,10 +125,11 @@ def char_notation_blit(col, tx, ty):
 
 @autoclass
 class Entity:
-    def __init__(self, char = ' ', x = 0, y = 0, z = 0, passable = False, draw_index = 0):
+    def __init__(self, char = ' ', x = 0, y = 0, z = 0, passable = False, draw_index = 0, slope = 0, attrs = set()):
         pass
     def print(self):
         #log(self.x,self.y,self.z)
+        global zindex_buf
         if CHAR_H <= self.z:
             return
         elif CHAR_W <= self.x:
@@ -114,21 +142,55 @@ class Entity:
 # Makes a grass entity
 def Grass(x,y,z):
     ch = random.choice([',','\'','"'])
+    
     ch = 'G:0:' + ch
-    return Entity(ch, x, y, z, True, -1)
+    e = Entity(ch, x, y, z, True, -1)
+    e.attrs.add('terrain')
+    return e
 
 # Create the cute world the player is in
 mapw = 64
 maph = 64
 
-player = Entity('@',5,1,5)
-evil   = Entity('R:E',10,1,5)
+player = Entity('@',12,1,5,draw_index = 31)
+evil   = Entity('R:E',10,1,5)   # Red evil enemy
 entities = [player, evil]
 for i in range(0,mapw):
     for j in range(0,maph):
-        entities.append(Grass(i,0,j))
+        # i // 8 is to make the world a slope (a smooth one)
+        entities.append(Grass(i,i // 8,j))
+
+entities = Map(entities)
+
+new_entities = Map(entities.d.values())
+# Generate slopes in the terrain "cliffs"
+for i in filter(lambda x: 'terrain' in x.attrs, entities.d.values()):
+    # Search for adjacent tiles in the higher layer
+    for e in (entities[i.x + 1, i.y + 1, i.z],entities[i.x + 1, i.y + 1, i.z + 1],entities[i.x - 1, i.y + 1, i.z],entities[i.x, i.y + 1, i.z - 1]):
+        if e != None: # there is nothing on the tile
+            if 'terrain' in e.attrs: # make sure the tile is not the player or smth
+                ne = Grass(e.x, i.y, e.z)
+                ne.slope = 1
+                ne.char = '<'
+                new_entities.add(ne)
+    # do the same but for lower layers
+    for e in (entities[i.x + 1, i.y - 1, i.z],entities[i.x + 1, i.y - 1, i.z + 1],entities[i.x - 1, i.y - 1, i.z],entities[i.x, i.y - 1, i.z - 1]):
+        if e != None: 
+            if 'terrain' in e.attrs:
+
+                entities[i.x, i.y, i.z].char = '>'
+                entities[i.x, i.y, i.z].slope = -1
+entities = new_entities
+del new_entities
+    
+
+
+
+
 for i in entities:
-    i.print()
+    
+    if player.y == i.y: 
+        i.print()  
 
 
 # Variables for the loop
@@ -161,7 +223,8 @@ while True:
             zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
             update_mode()
             for i in entities:
-                i.print()
+                if player.y == i.y:
+                    i.print() 
         elif event.type == KEYDOWN:
             if event.key == K_UP:
                 direction = 8
@@ -171,6 +234,7 @@ while True:
                 direction = 4
             elif event.key == K_RIGHT:
                 direction = 6
+            tick = True
         elif event.type == KEYUP:
             if event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                 direction = 5
@@ -182,29 +246,38 @@ while True:
                 pygame.quit()
                 sys.exit()
     timeSinceVideoResize += 1
-    if direction != 5:
+    if direction != 5 and MOVE_WHEN_HELD:
         tick = True
     if timeSinceVideoResize > 10 and videoResizeWasHappening:
         tick = True
         videoResizeWasHappening = False
     if tick:
-        if direction == 2:
-            player.z += 1
-        if direction == 4:
-            player.x -= 1
-            
-        if direction == 6:
-            player.x += 1
-            
-        if direction == 8:
-            player.z -= 1
-    if tick: # Graphics tick, redrawing and stuff
+        tile_at_player = entities[player.x, player.y, player.z]
+        def move_player_according_to_direction():
+            if direction == 2:
+                player.z += 1
+            if direction == 4:
+                player.x -= 1
+                
+            if direction == 6:
+                player.x += 1
+                
+            if direction == 8:
+                player.z -= 1
+        move_player_according_to_direction()
+        if direction != 5:
+            player.y += tile_at_player.slope
+
+    if tick: # Graphics tick, redrawing and stuff. Split it from the main tick when the game gets too large
         zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
-
+        screen.fill((0,0,0)) # TODO only redraw everything if the camera has moved
         for i in entities:
-            i.print()
+            
+            if player.y == i.y:
+                i.print() 
             
 
+        char_notation_blit('@',player.x,player.z)
         pygame.display.update()
     tick = False
     clock.tick(30)
