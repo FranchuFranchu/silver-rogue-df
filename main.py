@@ -114,6 +114,10 @@ def blit_char_at(char, tx, ty, fgcol = 'W', bgcol = '0'):
 # Calls blit_char_at, but uses color notation
 def char_notation_blit(col, tx, ty):
     global screen
+    if type(col) == int:
+        blit_char_at(col,tx,ty)
+        return True
+
     k = col.split(':')
     if len(k) == 1:
         blit_char_at(col,tx,ty)
@@ -175,14 +179,14 @@ class WorldTile:
                     if 'terrain' in e.attrs: # make sure the tile is not the player or smth
                         ne = Grass(e.x, i.y, e.z)
                         ne.slope = 1
-                        ne.char = '<'
+                        ne.char = 0x1F # Down arrow character
                         new_entities.add(ne)
             # do the same but for lower layers
             for e in (entities[i.x + 1, i.y - 1, i.z],entities[i.x + 1, i.y - 1, i.z + 1],entities[i.x - 1, i.y - 1, i.z],entities[i.x, i.y - 1, i.z - 1]):
                 if e != None: 
                     if 'terrain' in e.attrs:
 
-                        entities[i.x, i.y, i.z].char = '>'
+                        entities[i.x, i.y, i.z].char = 0x1E # Up arrow
                         entities[i.x, i.y, i.z].slope = -1
         entities = new_entities
         del new_entities
