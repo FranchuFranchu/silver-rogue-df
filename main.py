@@ -32,9 +32,11 @@ zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
 # It works as follows:
 #   - A colored tile is represented by a string
 #   - The string has the format [foreground[:background]:]character
+#   - If the character starts with whitespace, then interpret the rest of string as an hexadecimal representation of the character
 #   - Examples:
 #       - R:@ = Red "@"
 #       - B:G:w = Blue "w" with a green background
+#       - Y: 2741 = a yellow Unicode 0x2741: Flower emoji
 
 COLOR_MAP = {
     "0": (0,0,0),
@@ -119,6 +121,8 @@ def char_notation_blit(col, tx, ty):
         return True
 
     k = col.split(':')
+    if k[-1][0] == ' ' and len(k[-1]) > 1:
+        k[-1] = chr(int(k[-1][1:], 16)) # Convert to base-16 int, then get the corresponding character
     if len(k) == 1:
         blit_char_at(col,tx,ty)
     elif len(k) == 2:
@@ -179,14 +183,14 @@ class WorldTile:
                     if 'terrain' in e.attrs: # make sure the tile is not the player or smth
                         ne = Grass(e.x, i.y, e.z)
                         ne.slope = 1
-                        ne.char = 0x1F # Down arrow character
+                        ne.char = "G: 1F" # Down arrow character
                         new_entities.add(ne)
             # do the same but for lower layers
             for e in (entities[i.x + 1, i.y - 1, i.z],entities[i.x + 1, i.y - 1, i.z + 1],entities[i.x - 1, i.y - 1, i.z],entities[i.x, i.y - 1, i.z - 1]):
                 if e != None: 
                     if 'terrain' in e.attrs:
 
-                        entities[i.x, i.y, i.z].char = 0x1E # Up arrow
+                        entities[i.x, i.y, i.z].char = "G: 1E" # Up arrow
                         entities[i.x, i.y, i.z].slope = -1
         entities = new_entities
         del new_entities
