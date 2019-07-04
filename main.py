@@ -139,6 +139,7 @@ class Entity:
         zindex_buf[self.x][self.z] = self.draw_index
         char_notation_blit(self.char, self.x, self.z)
 
+
 # Makes a grass entity
 def Grass(x,y,z):
     ch = random.choice([',','\'','"'])
@@ -148,51 +149,55 @@ def Grass(x,y,z):
     e.attrs.add('terrain')
     return e
 
-# Create the cute world the player is in
 mapw = 64
 maph = 64
 
-player = Entity('@',12,1,5,draw_index = 31)
-evil   = Entity('R:E',10,1,5)   # Red evil enemy
-entities = [player, evil]
-for i in range(0,mapw):
-    for j in range(0,maph):
-        # i // 8 is to make the world a slope (a smooth one)
-        entities.append(Grass(i,i // 8,j))
+@autoclass
+class WorldTile:
+    def __init__(self, char = ' ', x = 0, z = 0, passable = False):
+        pass
+    def gen(self):
+        # Generate the world
+        entities = []
+        for i in range(0,mapw):
+            for j in range(0,maph):
+                # i // 8 is to make the world a slope (a smooth one)
+                entities.append(Grass(i,i // 8,j))
 
-entities = Map(entities)
+        entities = Map(entities)
 
-new_entities = Map(entities.d.values())
-# Generate slopes in the terrain "cliffs"
-for i in filter(lambda x: 'terrain' in x.attrs, entities.d.values()):
-    # Search for adjacent tiles in the higher layer
-    for e in (entities[i.x + 1, i.y + 1, i.z],entities[i.x + 1, i.y + 1, i.z + 1],entities[i.x - 1, i.y + 1, i.z],entities[i.x, i.y + 1, i.z - 1]):
-        if e != None: # there is nothing on the tile
-            if 'terrain' in e.attrs: # make sure the tile is not the player or smth
-                ne = Grass(e.x, i.y, e.z)
-                ne.slope = 1
-                ne.char = '<'
-                new_entities.add(ne)
-    # do the same but for lower layers
-    for e in (entities[i.x + 1, i.y - 1, i.z],entities[i.x + 1, i.y - 1, i.z + 1],entities[i.x - 1, i.y - 1, i.z],entities[i.x, i.y - 1, i.z - 1]):
-        if e != None: 
-            if 'terrain' in e.attrs:
+        new_entities = Map(entities.d.values())
+        # Generate slopes in the terrain "cliffs"
+        for i in filter(lambda x: 'terrain' in x.attrs, entities.d.values()):
+            # Search for adjacent tiles in the higher layer
+            for e in (entities[i.x + 1, i.y + 1, i.z],entities[i.x + 1, i.y + 1, i.z + 1],entities[i.x - 1, i.y + 1, i.z],entities[i.x, i.y + 1, i.z - 1]):
+                if e != None: # there is nothing on the tile
+                    if 'terrain' in e.attrs: # make sure the tile is not the player or smth
+                        ne = Grass(e.x, i.y, e.z)
+                        ne.slope = 1
+                        ne.char = '<'
+                        new_entities.add(ne)
+            # do the same but for lower layers
+            for e in (entities[i.x + 1, i.y - 1, i.z],entities[i.x + 1, i.y - 1, i.z + 1],entities[i.x - 1, i.y - 1, i.z],entities[i.x, i.y - 1, i.z - 1]):
+                if e != None: 
+                    if 'terrain' in e.attrs:
 
-                entities[i.x, i.y, i.z].char = '>'
-                entities[i.x, i.y, i.z].slope = -1
-entities = new_entities
-del new_entities
-    
-
-
-
-
-for i in entities:
-    
-    if player.y == i.y: 
-        i.print()  
+                        entities[i.x, i.y, i.z].char = '>'
+                        entities[i.x, i.y, i.z].slope = -1
+        entities = new_entities
+        del new_entities
+        return entities
+        
 
 
+
+
+
+# Create world tile and entities
+worldtile = WorldTile()
+entities = worldtile.gen()
+player = Entity('@',4,0,4)
+entities.add(player)
 # Variables for the loop
 pygame.display.flip()
 clock = pygame.time.Clock()
@@ -236,8 +241,13 @@ while True:
                 direction = 6
             tick = True
         elif event.type == KEYUP:
+            mods = pygame.key.get_mods()
             if event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                 direction = 5
+            if mods & KMOD_SHIFT:
+                if event.key == KEY_M:
+                    # Map or travel
+                    pass
 
             if event.key == K_F11:
                 IS_FULLSCREEN = not IS_FULLSCREEN
@@ -253,6 +263,9 @@ while True:
         videoResizeWasHappening = False
     if tick:
         tile_at_player = entities[player.x, player.y, player.z]
+        if tile_at_player == None:
+            print('You somehow got out of the map. You crashed the program')
+
         def move_player_according_to_direction():
             if direction == 2:
                 player.z += 1
@@ -264,9 +277,22 @@ while True:
                 
             if direction == 8:
                 player.z -= 1
+
+            if direction != 5:
+                player.y += tile_at_player.slope
+
+            # Trick to undo player Y movement if player stepped from a slope in the reverse direction
+            if entities[player.x, player.y, player.z] == None:
+                if tile_at_player.slope != 0:
+                    player.y -= tile_at_player.slope
+                return
+                    
+            # Trick to undo player Y movement if the player is walking parallel to the slope
+            if entities[player.x, player.y, player.z].slope == tile_at_player.slope:
+                if direction != 5:
+                    player.y -= tile_at_player.slope
+
         move_player_according_to_direction()
-        if direction != 5:
-            player.y += tile_at_player.slope
 
     if tick: # Graphics tick, redrawing and stuff. Split it from the main tick when the game gets too large
         zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
@@ -279,5 +305,8 @@ while True:
 
         char_notation_blit('@',player.x,player.z)
         pygame.display.update()
+
+    if tick:
+        last_player_pos = tile_at_player.x, tile_at_player.y, tile_at_player.z
     tick = False
     clock.tick(30)
