@@ -162,10 +162,10 @@ maph = 64
 
 @autoclass
 class WorldTile:
-    def __init__(self, char = ' ', x = 0, z = 0, passable = False):
+    def __init__(self, char = ' ', x = 0, z = 0, passable = False, draw_index = 1):
         pass
     def gen(self):
-        # Generate the world
+        # Generate the local map
         entities = []
         for i in range(0,mapw):
             for j in range(0,maph):
@@ -193,23 +193,66 @@ class WorldTile:
                         entities[i.x, i.y, i.z].char = "G: 1E" # Up arrow
                         entities[i.x, i.y, i.z].slope = -1
         entities = new_entities
-        del new_entities
-        return entities
-        
+        return new_entities
+    def print(self):
+        global zindex_buf
+        if CHAR_H <= self.z:
+            return
+        elif CHAR_W <= self.x:
+            return
+        if self.draw_index < zindex_buf[self.x][self.z]:
+            return
+        zindex_buf[self.x][self.z] = self.draw_index  
+        char_notation_blit(self.char, self.x, self.z)      
 
 
 
+class World(Map):
+    def __init__(self, entity_list):
+        self.d = {}
+        for i in entity_list:
+            self.d[i.x,i.z] = i
+    def add(self, *items):
+        for i in items:
+            self.d[i.x,i.z] = i
+    def __contains__(self,*items):
+        for i in items:
+            if type(i) == tuple:
+                if len(i) == 2:
+                    return self.d.has_key(i.x,i.z)
+            else:
+                return self.d[i.x,i.z] == i
+    has = __contains__
+    def __getitem__(self,item):
+        if type(item) == tuple:
+            if len(item) == 2:
+                return self.d.get((item[0],item[1]))
 
+    def remove(self,*items):
+        for i in items:
+            del self.d[i.x,i.z]
 
 # Create world tile and entities
+worldw = 48
+worldh = 48
+world = World([])
+
+for i in range(0,worldw):
+    for j in range(0,worldh):
+        world.add(WorldTile('G:n',i,j))
+
+
 worldtile = WorldTile()
 entities = worldtile.gen()
 player = Entity('@',4,0,4)
 entities.add(player)
+
 # Variables for the loop
 pygame.display.flip()
 clock = pygame.time.Clock()
 
+# Player state variables
+is_on_worldmap = False
 
 tick = True
 
@@ -253,9 +296,9 @@ while True:
             if event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                 direction = 5
             if mods & KMOD_SHIFT:
-                if event.key == KEY_M:
+                if event.key == K_m:
                     # Map or travel
-                    pass
+                    is_on_worldmap = not is_on_worldmap
 
             if event.key == K_F11:
                 IS_FULLSCREEN = not IS_FULLSCREEN
@@ -269,52 +312,59 @@ while True:
     if timeSinceVideoResize > 10 and videoResizeWasHappening:
         tick = True
         videoResizeWasHappening = False
-    if tick:
-        tile_at_player = entities[player.x, player.y, player.z]
-        if tile_at_player == None:
-            print('You somehow got out of the map. You crashed the program')
+    if not is_on_worldmap: # Local view
+        if tick:
+            tile_at_player = entities[player.x, player.y, player.z]
+            if tile_at_player == None:
+                print('You somehow got out of the map. You crashed the program')
 
-        def move_player_according_to_direction():
-            if direction == 2:
-                player.z += 1
-            if direction == 4:
-                player.x -= 1
-                
-            if direction == 6:
-                player.x += 1
-                
-            if direction == 8:
-                player.z -= 1
-
-            if direction != 5:
-                player.y += tile_at_player.slope
-
-            # Trick to undo player Y movement if player stepped from a slope in the reverse direction
-            if entities[player.x, player.y, player.z] == None:
-                if tile_at_player.slope != 0:
-                    player.y -= tile_at_player.slope
-                return
+            def move_player_according_to_direction():
+                if direction == 2:
+                    player.z += 1
+                if direction == 4:
+                    player.x -= 1
                     
-            # Trick to undo player Y movement if the player is walking parallel to the slope
-            if entities[player.x, player.y, player.z].slope == tile_at_player.slope:
+                if direction == 6:
+                    player.x += 1
+                    
+                if direction == 8:
+                    player.z -= 1
+
                 if direction != 5:
-                    player.y -= tile_at_player.slope
+                    player.y += tile_at_player.slope
 
-        move_player_according_to_direction()
+                # Trick to undo player Y movement if player stepped from a slope in the reverse direction
+                if entities[player.x, player.y, player.z] == None:
+                    if tile_at_player.slope != 0:
+                        player.y -= tile_at_player.slope
+                    return
+                        
+                # Trick to undo player Y movement if the player is walking parallel to the slope
+                if entities[player.x, player.y, player.z].slope == tile_at_player.slope:
+                    if direction != 5:
+                        player.y -= tile_at_player.slope
 
-    if tick: # Graphics tick, redrawing and stuff. Split it from the main tick when the game gets too large
-        zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
-        screen.fill((0,0,0)) # TODO only redraw everything if the camera has moved
-        for i in entities:
-            
-            if player.y == i.y:
-                i.print() 
-            
+            move_player_according_to_direction()
 
-        char_notation_blit('@',player.x,player.z)
-        pygame.display.update()
+        if tick: # Graphics tick, redrawing and stuff. Split it from the main tick when the game gets too large
+            zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
+            screen.fill((0,0,0)) # TODO only redraw everything if the camera has moved
+            for i in entities:
+                
+                if player.y == i.y:
+                    i.print() 
+                
 
-    if tick:
-        last_player_pos = tile_at_player.x, tile_at_player.y, tile_at_player.z
+            char_notation_blit('@',player.x,player.z)
+            pygame.display.update()
+
+        if tick:
+            last_player_pos = tile_at_player.x, tile_at_player.y, tile_at_player.z
+    else:
+        if tick:
+            for i in world:
+                i.print()
+            pygame.display.update()
+
     tick = False
     clock.tick(30)
