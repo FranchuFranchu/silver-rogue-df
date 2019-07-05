@@ -23,10 +23,13 @@ SCREEN_H = TILE_H * CHAR_H
 # If the player should move when an arrow key is held
 MOVE_WHEN_HELD = False
 
+# Default map width and height for a local map
+mapw = 64
+maph = 64
+
 # this is a 2-dimensional array for the z-index of things:
 # i.e., the player has to be drawn above grass
-zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
-
+zindex_buf = [[-100 for _ in range(maph)] for _ in range(mapw)]
 # I made a way to add foreground and background colors to entitities easily
 # i'll call it "Color notation" here
 # It works as follows:
@@ -138,14 +141,14 @@ class Entity:
     def print(self):
         #log(self.x,self.y,self.z)
         global zindex_buf
-        if CHAR_H <= self.z:
+        if CHAR_H <= self.z + cameraz:
             return
-        elif CHAR_W <= self.x:
+        elif CHAR_W <= self.x + camerax:
             return
         if self.draw_index < zindex_buf[self.x][self.z]:
             return
         zindex_buf[self.x][self.z] = self.draw_index
-        char_notation_blit(self.char, self.x, self.z)
+        char_notation_blit(self.char, self.x + camerax, self.z + cameraz)
 
 
 # Makes a grass entity
@@ -156,10 +159,7 @@ def Grass(x,y,z):
     e = Entity(ch, x, y, z, True, -1)
     e.attrs.add('terrain')
     return e
-
-mapw = 64
-maph = 64
-
+    
 @autoclass
 class WorldTile:
     def __init__(self, char = ' ', x = 0, z = 0, passable = False, draw_index = 1):
@@ -196,9 +196,9 @@ class WorldTile:
         return new_entities
     def print(self):
         global zindex_buf
-        if CHAR_H <= self.z:
+        if CHAR_H <= self.z - cameraz:
             return
-        elif CHAR_W <= self.x:
+        elif CHAR_W <= self.x - camerax:
             return
         if self.draw_index < zindex_buf[self.x][self.z]:
             return
@@ -233,6 +233,9 @@ class World(Map):
             del self.d[i.x,i.z]
 
 # Create world tile and entities
+camerax = 0
+cameraz = 0
+
 worldw = 48
 worldh = 48
 world = World([])
@@ -244,7 +247,7 @@ for i in range(0,worldw):
 
 worldtile = WorldTile()
 entities = worldtile.gen()
-player = Entity('@',4,0,4)
+player = Entity('@',4,0,4,attrs = {'player'})
 entities.add(player)
 
 # Variables for the loop
@@ -276,7 +279,7 @@ while True:
             CHAR_W = int(SCREEN_W / TILE_W)
             videoResizeWasHappening = True
             timeSinceVideoResize = 0
-            zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
+            zindex_buf = [[-100 for _ in range(maph)] for _ in range(mapw)]
             update_mode()
             for i in entities:
                 if player.y == i.y:
@@ -347,15 +350,17 @@ while True:
             move_player_according_to_direction()
 
         if tick: # Graphics tick, redrawing and stuff. Split it from the main tick when the game gets too large
-            zindex_buf = [[-100 for _ in range(CHAR_H)] for _ in range(CHAR_W)]
+
+            # Move camera
+            camerax -= player.x - tile_at_player.x
+            cameraz -= player.z - tile_at_player.z
+            zindex_buf = [[-100 for _ in range(maph)] for _ in range(mapw)]
             screen.fill((0,0,0)) # TODO only redraw everything if the camera has moved
             for i in entities:
                 
                 if player.y == i.y:
                     i.print() 
                 
-
-            char_notation_blit('@',player.x,player.z)
             pygame.display.update()
 
         if tick:
