@@ -3,7 +3,7 @@ import random
 
 def main(seed, mx, my, wx, wy):
 	mx, my = range(mx), range(my)
-	octaves = 8
+	octaves = 16
 	freq = octaves * 16
 	l = [[0 for i in my] for i in my]
 	for x in mx:

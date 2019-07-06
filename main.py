@@ -177,7 +177,6 @@ class Entity:
 # Makes a grass entity
 def Grass(x,y,z):
     ch = random.choice([',','\'','"'])
-    
     ch = 'G:0:' + ch
     e = Entity(ch, x, y, z, True, -1)
     e.attrs.add('terrain')
@@ -198,7 +197,6 @@ class WorldTile:
             for j in range(0,maph):
                 # i // 8 is to make the world a slope (a smooth one)
                 entities.append(Grass(i,int(map_gened[i][j] * 10 + 10),j))
-
         entities = Map(entities)
 
         new_entities = Map(entities.d.values())
@@ -208,10 +206,14 @@ class WorldTile:
             for e in (entities[i.x + 1, i.y + 1, i.z],entities[i.x + 1, i.y + 1, i.z + 1],entities[i.x - 1, i.y + 1, i.z],entities[i.x, i.y + 1, i.z - 1]):
                 if e != None: # there is nothing on the tile
                     if 'terrain' in e.attrs: # make sure the tile is not the player or smth
-                        ne = Grass(e.x, i.y, e.z)
-                        ne.slope = 1
-                        ne.char = "G: 1F" # Down arrow character
-                        new_entities.add(ne)
+
+
+                        entities[i.x, i.y, i.z].char = "G: 1F" # Up arrow
+                        entities[i.x, i.y, i.z].slope = 1
+
+                        if entities[e.x, i.y + 1, e.z]:
+                            entities[e.x, i.y + 1, e.z].slope = -1
+                            entities[e.x, i.y + 1, e.z].char = "G: 1E"
             # do the same but for lower layers
             for e in (entities[i.x + 1, i.y - 1, i.z],entities[i.x + 1, i.y - 1, i.z + 1],entities[i.x - 1, i.y - 1, i.z],entities[i.x, i.y - 1, i.z - 1]):
                 if e != None: 
@@ -219,6 +221,11 @@ class WorldTile:
 
                         entities[i.x, i.y, i.z].char = "G: 1E" # Up arrow
                         entities[i.x, i.y, i.z].slope = -1
+                        if entities[e.x, i.y - 1, e.z]:
+                            entities[e.x, i.y - 1, e.z].slope = 1
+                            entities[e.x, i.y - 1, e.z].char = "G: 1F"
+                        else:
+                            pass
         entities = new_entities
         return new_entities
     def print(self):
@@ -333,6 +340,8 @@ while True:
                 if event.key == K_m:
                     # Map or travel
                     is_on_worldmap = not is_on_worldmap
+                if event.key == K_q:
+                    print(player)
 
             if event.key == K_F11:
                 IS_FULLSCREEN = not IS_FULLSCREEN
@@ -379,11 +388,11 @@ while True:
                     regenerate_world_tile(player.x, player.z)
                 if player.x >= mapw:
                     playerworldx += 1
-                    player.x = 1
+                    player.x = 0
                     regenerate_world_tile(player.x, player.z)
                 if player.z >= maph:
                     playerworldy += 1
-                    player.z = 1
+                    player.z = 0
                     regenerate_world_tile(player.x, player.z)
 
                 # Trick to undo player Y movement if player stepped from a slope in the reverse direction
