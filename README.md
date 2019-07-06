@@ -6,6 +6,7 @@ On heavily development, especially the name
 	autoclass
     pygame
     noise
+    dict
 All of them can be pip installed
 
 ## Controls
