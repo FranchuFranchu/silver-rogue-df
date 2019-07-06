@@ -11,6 +11,11 @@ pygame.init()
 
 IS_FULLSCREEN = False
 
+# Declare player and entities as global variables
+player = None
+entities = None
+
+
 TILE_W = 12 # Tile size, in pixels
 TILE_H = 12
 CHAR_W = 18 # Screen size, in tiles
@@ -21,16 +26,20 @@ SCREEN_W = TILE_W * CHAR_W
 SCREEN_H = TILE_H * CHAR_H
 
 # If the player should move when an arrow key is held
-MOVE_WHEN_HELD = False
+MOVE_WHEN_HELD = True
 
 # Default map width and height for a local map
 mapw = 64
 maph = 64
 
-# Player position
+# Player position in local map
 playerx = 10
 playery = 10
 playerz = 10
+
+# Player position in the world
+playerworldx = 2
+playerworldy = 2
 
 # Camera position
 camerax = 0
@@ -176,18 +185,19 @@ def Grass(x,y,z):
 
 @autoclass
 class WorldTile:
-    def __init__(self, char = ' ', x = 0, z = 0, passable = False, draw_index = 1):
+    def __init__(self, char = ' ', x = 0, z = 0, worldseed = random.random() * 10 ** 6, passable = False, draw_index = 1):
         pass
     def gen(self):
+        global zindex_buf
         # Generate the local map
-        map_gened = generate.terrain.main(mapw,maph)
-
+        map_gened = generate.terrain.main(self.worldseed, mapw, maph, self.x, self.z)
+        zindex_buf = [[-100 for _ in range(maph)] for _ in range(mapw)]
 
         entities = []
         for i in range(0,mapw):
             for j in range(0,maph):
                 # i // 8 is to make the world a slope (a smooth one)
-                entities.append(Grass(i,int(map_gened[i][j] * 10),j))
+                entities.append(Grass(i,int(map_gened[i][j] * 10 + 10),j))
 
         entities = Map(entities)
 
@@ -225,12 +235,14 @@ class WorldTile:
 
 
 class World(Map):
-    def __init__(self, entity_list):
+    def __init__(self, entity_list, seed = 0):
         self.d = {}
         for i in entity_list:
             self.d[i.x,i.z] = i
+        self.seed = seed
     def add(self, *items):
         for i in items:
+            i.worldseed = self.seed
             self.d[i.x,i.z] = i
     def __contains__(self,*items):
         for i in items:
@@ -250,21 +262,23 @@ class World(Map):
             del self.d[i.x,i.z]
 
 # Create world tile and entities
-world = World([])
+world = World([],seed = 0)
 
 for i in range(0,worldw):
     for j in range(0,worldh):
         world.add(WorldTile('G:n',i,j))
 
+def regenerate_world_tile(playerx = 4, playerz = 4):
+    global player
+    global entities
+    worldtile = world[playerworldx,playerworldy]
+    entities = worldtile.gen()
+    player = Entity('@', playerx, 0, playerz, attrs = {'player'})
+    for i in filter(lambda e: e.x == player.x and e.z == player.z, entities):
+        player.y = i.y
+    entities.add(player)
 
-worldtile = WorldTile()
-entities = worldtile.gen()
-player = Entity('@',4,0,4,attrs = {'player'})
-for i in filter(lambda e: e.x == player.x and e.z == player.z, entities):
-    print(i.y)
-    player.y = i.y
-entities.add(player)
-
+regenerate_world_tile()
 # Variables for the loop
 pygame.display.flip()
 clock = pygame.time.Clock()
@@ -339,6 +353,9 @@ while True:
                 print('You somehow got out of the map. You crashed the program')
 
             def move_player_according_to_direction():
+                global playerworldx
+                global playerworldy
+                global player
                 if direction == 2:
                     player.z += 1
                 if direction == 4:
@@ -352,6 +369,22 @@ while True:
 
                 if direction != 5:
                     player.y += tile_at_player.slope
+                if player.x < 0:
+                    playerworldx -= 1
+                    player.x = mapw - 1
+                    regenerate_world_tile(player.x, player.z)
+                if player.z < 0:
+                    playerworldy -= 1
+                    player.z = maph - 1
+                    regenerate_world_tile(player.x, player.z)
+                if player.x >= mapw:
+                    playerworldx += 1
+                    player.x = 1
+                    regenerate_world_tile(player.x, player.z)
+                if player.z >= maph:
+                    playerworldy += 1
+                    player.z = 1
+                    regenerate_world_tile(player.x, player.z)
 
                 # Trick to undo player Y movement if player stepped from a slope in the reverse direction
                 if entities[player.x, player.y, player.z] == None:
@@ -363,7 +396,6 @@ while True:
                 if entities[player.x, player.y, player.z].slope == tile_at_player.slope:
                     if direction != 5:
                         player.y -= tile_at_player.slope
-
             move_player_according_to_direction()
 
         if tick: # Graphics tick, redrawing and stuff. Split it from the main tick when the game gets too large

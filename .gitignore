@@ -1,3 +1,4 @@
 log.txt
 __pycache__
 pycallgraph.png
+generate/__pycache__
