@@ -5,7 +5,7 @@ from pygame.locals import *
 from autoclass import autoclass
 
 import spritesheets
-
+import generate
 
 pygame.init()
 
@@ -26,6 +26,20 @@ MOVE_WHEN_HELD = False
 # Default map width and height for a local map
 mapw = 64
 maph = 64
+
+# Player position
+playerx = 10
+playery = 10
+playerz = 10
+
+# Camera position
+camerax = 0
+cameraz = 0
+
+# Size in local maps of the whole world
+# (the world is supposed to be round, not yet implemented)
+worldw = 48
+worldh = 48
 
 # this is a 2-dimensional array for the z-index of things:
 # i.e., the player has to be drawn above grass
@@ -159,18 +173,21 @@ def Grass(x,y,z):
     e = Entity(ch, x, y, z, True, -1)
     e.attrs.add('terrain')
     return e
-    
+
 @autoclass
 class WorldTile:
     def __init__(self, char = ' ', x = 0, z = 0, passable = False, draw_index = 1):
         pass
     def gen(self):
         # Generate the local map
+        map_gened = generate.terrain.main(mapw,maph)
+
+
         entities = []
         for i in range(0,mapw):
             for j in range(0,maph):
                 # i // 8 is to make the world a slope (a smooth one)
-                entities.append(Grass(i,i // 8,j))
+                entities.append(Grass(i,int(map_gened[i][j] * 10),j))
 
         entities = Map(entities)
 
@@ -233,11 +250,6 @@ class World(Map):
             del self.d[i.x,i.z]
 
 # Create world tile and entities
-camerax = 0
-cameraz = 0
-
-worldw = 48
-worldh = 48
 world = World([])
 
 for i in range(0,worldw):
@@ -248,6 +260,9 @@ for i in range(0,worldw):
 worldtile = WorldTile()
 entities = worldtile.gen()
 player = Entity('@',4,0,4,attrs = {'player'})
+for i in filter(lambda e: e.x == player.x and e.z == player.z, entities):
+    print(i.y)
+    player.y = i.y
 entities.add(player)
 
 # Variables for the loop
@@ -264,9 +279,11 @@ videoResizeWasHappening = False
 timeSinceVideoResize = 0
 # Direction in a keypad 
 # 7 8 9
-# 4 5 6 # 5 means the player is still
+# 4 5 6 # 5 means the player is standing still
 # 1 2 3
 direction = 5
+
+################ MAIN LOOP ####################################
 while True:
     for event in pygame.event.get():
         if event.type == QUIT:

@@ -5,7 +5,9 @@ On heavily development, especially the name
 	python>=3.0
 	autoclass
     pygame
-   
+    noise
+All of them can be pip installed
+
 ## Controls
 	Arrow keys: Move
 
