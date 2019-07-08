@@ -1,17 +1,20 @@
 import random
 import runpy
-from dict import dict
+import importlib
+import builtins
 
 import pygame, sys
 from pygame.locals import *
 from autoclass import autoclass
+from dict import dict
 
 import spritesheets
 import generate
-from variable_declarations import *
+
+
 
 def runpy_import(file, globals_ = {}): # runpy.run_module, but delete special variables
-    d = runpy.run_path(file, globals_)
+    d = __import__(file).__dict__
     del d['__name__'] 
     del d['__spec__'] 
     del d['__file__']  
@@ -25,22 +28,21 @@ def runpy_import(file, globals_ = {}): # runpy.run_module, but delete special va
 game = dict(**{
     "IS_FULLSCREEN": False,
     })
-game.update(**runpy_import("variable_declarations.py"))
-print(game)
+game.update(**runpy_import("variable_declarations"))
 @autoclass
 class Entity:
     def __init__(self, char = ' ', x = 0, y = 0, z = 0, passable = False, draw_index = 0, slope = 0, attrs = set()):
         pass
     def print(self):
         #log(self.x,self.y,self.z)
-        if CHAR_H <= self.z + cameraz:
+        if game.CHAR_H <= self.z + game.cameraz:
             return
-        elif CHAR_W <= self.x + camerax:
+        elif game.CHAR_W <= self.x + game.camerax:
             return
         if self.draw_index < game.zindex_buf[self.x][self.z]:
             return
         game.zindex_buf[self.x][self.z] = self.draw_index
-        game.char_notation_blit(self.char, self.x + camerax, self.z + cameraz)
+        game.char_notation_blit(game,self.char, self.x + game.camerax, self.z + game.cameraz)
  
  
 # Makes a grass entity
@@ -92,7 +94,7 @@ game.screen = None
 def update_mode():
     flags = RESIZABLE
     flags |= pygame.FULLSCREEN if game.IS_FULLSCREEN else 0
-    game.screen = pygame.display.set_mode((SCREEN_H, SCREEN_W), flags) # Create the game.screen
+    game.screen = pygame.display.set_mode((game.SCREEN_H, game.SCREEN_W), flags) # Create the game.screen
 
 update_mode()
 
@@ -100,7 +102,8 @@ update_mode()
 
 
 # Import ascii_pygame_game_fuctions with globals
-game = dict(**game,**(runpy_import('ascii_pygame_drawing_functions.py', {'game': game})))
+import ascii_pygame_drawing_functions
+game = dict(**game,**ascii_pygame_drawing_functions.__dict__)
 
 
 
@@ -159,16 +162,16 @@ class WorldTile:
         game.entities = new_entities
         return new_entities
     def print(self):
-        if CHAR_H <= self.z - cameraz:
+        if game.CHAR_H <= self.z - game.cameraz:
             return
-        elif CHAR_W <= self.x - camerax:
+        elif game.CHAR_W <= self.x - game.camerax:
             return
         if self.draw_index < game.zindex_buf[self.x][self.z]:
             return
         game.zindex_buf[self.x][self.z] = self.draw_index 
         if self.town:
             self.char = '+' 
-        game.char_notation_blit(self.char, self.x, self.z)      
+        game.char_notation_blit(game,self.char, self.x, self.z)      
 
 
 
@@ -201,8 +204,8 @@ class World(Map):
 
 # Create world tile and game.entities
 world = World([],seed = 0)
-for i in range(0,worldw):
-    for j in range(0,worldh):
+for i in range(0,game.worldw):
+    for j in range(0,game.worldh):
         world.add(WorldTile('G:n',i,j))
 world[2,3].town = True
 game.player = Entity('@',0,0,0)
@@ -238,10 +241,10 @@ while True:
             pygame.quit()
             sys.exit()
         elif event.type == VIDEORESIZE:
-            SCREEN_H = event.h
-            SCREEN_W = event.w
-            CHAR_H = int(SCREEN_H / TILE_H)
-            CHAR_W = int(SCREEN_W / TILE_W)
+            game.SCREEN_H = event.h
+            game.SCREEN_W = event.w
+            game.CHAR_H = int(game.SCREEN_H / TILE_H)
+            game.CHAR_W = int(game.SCREEN_W / TILE_W)
             videoResizeWasHappening = True
             timeSinceVideoResize = 0
             game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
@@ -278,7 +281,7 @@ while True:
                 pygame.quit()
                 sys.exit()
     timeSinceVideoResize += 1
-    if direction != 5 and MOVE_WHEN_HELD:
+    if direction != 5 and game.MOVE_WHEN_HELD:
         tick = True
     if timeSinceVideoResize > 10 and videoResizeWasHappening:
         tick = True
@@ -335,10 +338,10 @@ while True:
         if tick: # Graphics tick, regame and stuff. Split it from the main tick when the game gets too large
 
             # Move camera
-            camerax -= game.player.x - tile_at_player.x
-            cameraz -= game.player.z - tile_at_player.z
+            game.camerax -= game.player.x - tile_at_player.x
+            game.cameraz -= game.player.z - tile_at_player.z
             game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
-            game.screen.fill((0,0,0)) # TODO only redraw everything if the camera has moved
+            game.screen.fill((0,0,0)) # TODO only redraw everything if the game.camera has moved
             for i in game.entities:
                 
                 if game.player.y == i.y:
@@ -352,7 +355,7 @@ while True:
         if tick:
             for i in world:
                 i.print()
-            game.char_notation_blit('@', game.playerworldx, game.playerworldy)
+            game.char_notation_blit(game,'@', game.playerworldx, game.playerworldy)
             pygame.display.update()
 
     tick = False

@@ -1,10 +1,11 @@
 import pygame
 import spritesheets
+from builtins import *
 # This should be imported after pygame is initialized
 
 sheet = spritesheets.spritesheet('tileset.png')
 # Gets the surface in the tileset for a specific character
-def get_surf(pos, fgcol = 'W', bgcol = '0'):
+def get_surf(game, pos, fgcol = 'W', bgcol = '0'):
     if type(pos) == str:
         pos = ord(pos)
     fgcol = game.COLOR_MAP[fgcol]
@@ -19,23 +20,23 @@ def get_surf(pos, fgcol = 'W', bgcol = '0'):
     return surf
 
 # Prints a character at a tile
-def blit_char_at(char, tx, ty, fgcol = 'W', bgcol = '0'):
+def blit_char_at(game, char, tx, ty, fgcol = 'W', bgcol = '0'):
     rect = pygame.Rect(tx * game.TILE_W, ty * game.TILE_H, game.TILE_W, game.TILE_H)
-    game.screen.blit(get_surf(char,fgcol,bgcol), rect)
+    game.screen.blit(get_surf(game, char,fgcol,bgcol), rect)
 
 # Calls blit_char_at, but uses color notation
-def char_notation_blit(col, tx, ty):
+def char_notation_blit(game, col, tx, ty):
     if type(col) == int:
-        blit_char_at(col,tx,ty)
+        blit_char_at(game,col,tx,ty)
         return True
 
     k = col.split(':')
     if k[-1][0] == ' ' and len(k[-1]) > 1:
         k[-1] = chr(int(k[-1][1:], 16)) # Convert to base-16 int, then get the corresponding character
     if len(k) == 1:
-        blit_char_at(col,tx,ty)
+        blit_char_at(game,col,tx,ty)
     elif len(k) == 2:
-        blit_char_at(k[1],tx,ty,k[0])
+        blit_char_at(game,k[1],tx,ty,k[0])
     elif len(k) == 3:
-        blit_char_at(k[2],tx,ty,k[0], k[1])
+        blit_char_at(game,k[2],tx,ty,k[0], k[1])
     return True
