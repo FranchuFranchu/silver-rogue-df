@@ -1,3 +1,5 @@
+__path__ = '.'
+
 TILE_W = 12 # Tile size, in pixels
 TILE_H = 12
 CHAR_W = 18 # Screen size, in tiles
@@ -15,17 +17,17 @@ mapw = 64
 maph = 64
 
 # Player position in local map
-playerx = 10
-playery = 10
-playerz = 10
+playerx = mapw / 2
+playery = 0
+playerz = maph / 2
 
 # Player position in the world
 playerworldx = 2
 playerworldy = 2
 
 # Camera position
-camerax = 0
-cameraz = 0
+camerax = CHAR_W / 2
+cameraz = CHAR_H / 2
 
 # Size in local maps of the whole world
 # (the world is supposed to be round, not yet implemented)
@@ -56,3 +58,6 @@ COLOR_MAP = {
     "C": (0,255,255),
     "W": (255,255,255)
 }
+
+
+player = None

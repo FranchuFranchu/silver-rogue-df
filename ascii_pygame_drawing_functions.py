@@ -1,17 +1,17 @@
 import pygame
-from variable_declarations import *
-
+import spritesheets
 # This should be imported after pygame is initialized
 
+sheet = spritesheets.spritesheet('tileset.png')
 # Gets the surface in the tileset for a specific character
 def get_surf(pos, fgcol = 'W', bgcol = '0'):
     if type(pos) == str:
         pos = ord(pos)
-    fgcol = COLOR_MAP[fgcol]
-    bgcol = COLOR_MAP[bgcol]
+    fgcol = game.COLOR_MAP[fgcol]
+    bgcol = game.COLOR_MAP[bgcol]
     upper = (pos & 0xF0) / 16 # Upper bits determine row
     lower = pos & 0x0F # Lower bits determine column
-    surf = sheet.image_at(((TILE_H * lower), (TILE_W * upper), TILE_W, TILE_H))
+    surf = sheet.image_at(((game.TILE_H * lower), (game.TILE_W * upper), game.TILE_W, game.TILE_H))
     arr = pygame.PixelArray(surf)
     arr.replace((255,0,255), bgcol)
     arr.replace((255,255,255), fgcol)
@@ -20,13 +20,11 @@ def get_surf(pos, fgcol = 'W', bgcol = '0'):
 
 # Prints a character at a tile
 def blit_char_at(char, tx, ty, fgcol = 'W', bgcol = '0'):
-    global screen
-    rect = pygame.Rect(tx * TILE_W, ty * TILE_H, TILE_W, TILE_H)
-    screen.blit(get_surf(char,fgcol,bgcol), rect)
+    rect = pygame.Rect(tx * game.TILE_W, ty * game.TILE_H, game.TILE_W, game.TILE_H)
+    game.screen.blit(get_surf(char,fgcol,bgcol), rect)
 
 # Calls blit_char_at, but uses color notation
 def char_notation_blit(col, tx, ty):
-    global screen
     if type(col) == int:
         blit_char_at(col,tx,ty)
         return True
