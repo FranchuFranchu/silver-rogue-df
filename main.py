@@ -12,7 +12,7 @@ import spritesheets
 import generate
 import variable_declarations
 from game_classes import BaseEntity, Map
-
+from time import perf_counter
 
 def runpy_import(file, globals_ = {}): # runpy.run_module, but delete special variables
     d = __import__(file).__dict__
@@ -195,7 +195,7 @@ regenerate_world_tile()
 def focus_camera(e):
 
     game.camerax = game.CHAR_W / 2 - e.x
-    game.cameraz = game.CHAR_H / 2 - e.x
+    game.cameraz = game.CHAR_H / 2 - e.z
 # Variables for the loop
 pygame.display.flip()
 clock = pygame.time.Clock()
@@ -214,8 +214,11 @@ timeSinceVideoResize = 0
 # 1 2 3
 direction = 5
 last_player_pos = game.player.pos
+dt = 0
+tt = 0
 ################ MAIN LOOP ####################################
 while True:
+    stime = perf_counter()
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
@@ -341,8 +344,7 @@ while True:
 
         if tick: # Graphics tick, redraw and stuff. Split it from the main tick when the game gets too large
             # Move camera
-            game.camerax -= game.player.x - tile_at_player.x
-            game.cameraz -= game.player.z - tile_at_player.z
+            focus_camera(game.player)
             game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
             game.screen.fill((0,0,0)) # TODO only redraw everything if the game.camera has moved
             for i in game.entities:
@@ -350,6 +352,8 @@ while True:
                 if game.player.y == i.y:
                     i.print() 
                 
+            game.char_notation_blit(game, 'FPS - ' + str(dt)[:5],0, 0)
+            game.char_notation_blit(game, 'Time taken - ' + str(tt)[:5],0, 1)
             pygame.display.update()
 
         if tick:
@@ -361,5 +365,10 @@ while True:
             game.char_notation_blit(game,'@', game.playerworldx, game.playerworldy)
             pygame.display.update()
 
+    etime = perf_counter()
+    dt = (-1 / (((etime - stime))))
+    tt = (etime - stime)
     tick = False
-    clock.tick(30)
+    if dt < 30:
+        dt = 30
+    clock.tick(dt)

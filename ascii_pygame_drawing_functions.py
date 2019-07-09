@@ -24,19 +24,30 @@ def blit_char_at(game, char, tx, ty, fgcol = 'W', bgcol = '0'):
     rect = pygame.Rect(tx * game.TILE_W, ty * game.TILE_H, game.TILE_W, game.TILE_H)
     game.screen.blit(get_surf(game, char,fgcol,bgcol), rect)
 
-# Calls blit_char_at, but uses color notation
-def char_notation_blit(game, col, tx, ty):
+# Converts color notation to a (char, fg, bg) tuple
+def char_not_to_cfg(col):
     if type(col) == int:
-        blit_char_at(game,col,tx,ty)
-        return True
+        return col, 'W', '0'
 
     k = col.split(':')
     if k[-1][0] == ' ' and len(k[-1]) > 1:
         k[-1] = chr(int(k[-1][1:], 16)) # Convert to base-16 int, then get the corresponding character
     if len(k) == 1:
-        blit_char_at(game,col,tx,ty)
+        return (col, 'W', '0')
     elif len(k) == 2:
-        blit_char_at(game,k[1],tx,ty,k[0])
+        return (k[1],k[0],'0')
     elif len(k) == 3:
-        blit_char_at(game,k[2],tx,ty,k[0], k[1])
-    return True
+        return (k[2],k[0], k[1])
+# Calls blit_char_at, but uses color notation
+def char_notation_blit(game, col, tx, ty):
+    cfg = char_not_to_cfg(col)
+    tx = int(tx)
+    ty = int(ty)
+    if type(cfg[0]) == int:
+        blit_char_at(game, cfg[0], tx, ty, cfg[1], cfg[2])
+    else:
+        for x, char in zip( \
+            range(tx, tx + len(cfg[0])), \
+            cfg[0] \
+            ):
+            blit_char_at(game, char, x, ty, cfg[1], cfg[2])
