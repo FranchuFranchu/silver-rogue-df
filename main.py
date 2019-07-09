@@ -50,6 +50,7 @@ class Entity(BaseEntity):
         BaseEntity.__init__(self, *args, **kwargs)
     def print(self):
         #log(self.x,self.y,self.z)
+        global game
         if game.CHAR_H <= self.z + game.cameraz:
             return
         elif game.CHAR_W <= self.x + game.camerax:
@@ -59,9 +60,9 @@ class Entity(BaseEntity):
         game.zindex_buf[self.x][self.z] = self.draw_index
         game.char_notation_blit(game,self.char, self.x + game.camerax, self.z + game.cameraz)
  
- 
 
 def update_mode():
+    global game
     flags = RESIZABLE
     flags |= pygame.FULLSCREEN if game.IS_FULLSCREEN else 0
     game.screen = pygame.display.set_mode((game.SCREEN_H, game.SCREEN_W), flags) # Create the game.screen
@@ -103,7 +104,6 @@ class WorldTile:
         if self.town:
             game.entities.add(*[Entity(i) for i in generate.town.main(game.entities)])
         new_entities = Map(game.entities.d.values())
-        print(list(filter(lambda x: '+' == x.char and 'terrain' in x.attrs, game.entities.d.values())))
         # Generate slopes in the terrain "cliffs"
         for i in filter(lambda x: 'terrain' in x.attrs, game.entities.d.values()):
             # Search for adjacent tiles in the higher layer
@@ -200,8 +200,8 @@ def focus_camera(e):
 pygame.display.flip()
 clock = pygame.time.Clock()
 
-# game.Player state variables
-is_on_worldmap = False
+# Player state variables
+curr_view = 'play' # if the player is in a menu, etc.
 
 tick = True
 
@@ -224,10 +224,15 @@ while True:
             pygame.quit()
             sys.exit()
         elif event.type == VIDEORESIZE:
+            print('vresize')
             game.SCREEN_H = event.h
             game.SCREEN_W = event.w
-            game.CHAR_H = int(game.SCREEN_H / TILE_H)
-            game.CHAR_W = int(game.SCREEN_W / TILE_W)
+            game.CHAR_H = int(game.SCREEN_H / game.TILE_H)
+            game.CHAR_W = int(game.SCREEN_W / game.TILE_W)
+            print(game.CHAR_W)
+            print(event.w)
+            print(game.TILE_W)
+            print(game.SCREEN_W)
             videoResizeWasHappening = True
             timeSinceVideoResize = 0
             game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
@@ -252,7 +257,10 @@ while True:
             if mods & KMOD_SHIFT:
                 if event.key == K_m:
                     # Map or travel
-                    is_on_worldmap = not is_on_worldmap
+                    if curr_view != 'play':
+                        curr_view = 'play'
+                    else:
+                        curr_view = 'map'
                     tick = True
                 if event.key == K_q:
                     print(game.player)
@@ -269,7 +277,7 @@ while True:
     if timeSinceVideoResize > 10 and videoResizeWasHappening:
         tick = True
         videoResizeWasHappening = False
-    if not is_on_worldmap: # Local view
+    if curr_view == 'play': # Local view
         if tick:
             tile_at_player = game.entities[game.player.pos]
             if tile_at_player == None:
@@ -358,13 +366,12 @@ while True:
 
         if tick:
             last_player_pos = tile_at_player.x, tile_at_player.y, tile_at_player.z
-    else:
+    elif curr_view == 'map':
         if tick:
             for i in world:
                 i.print()
             game.char_notation_blit(game,'@', game.playerworldx, game.playerworldy)
             pygame.display.update()
-
     etime = perf_counter()
     dt = (-1 / (((etime - stime))))
     tt = (etime - stime)
