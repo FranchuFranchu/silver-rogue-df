@@ -2,6 +2,7 @@ import random
 import runpy
 import importlib
 import builtins
+import math
 
 import pygame, sys
 from pygame.locals import *
@@ -13,6 +14,7 @@ import generate
 import variable_declarations
 from game_classes import BaseEntity, Map
 from time import perf_counter
+import nonblockingchinput
 
 def runpy_import(file, globals_ = {}): # runpy.run_module, but delete special variables
     d = __import__(file).__dict__
@@ -63,9 +65,9 @@ class Entity(BaseEntity):
 
 def update_mode():
     global game
-    flags = RESIZABLE
+    flags = 0
     flags |= pygame.FULLSCREEN if game.IS_FULLSCREEN else 0
-    game.screen = pygame.display.set_mode((game.SCREEN_H, game.SCREEN_W), flags) # Create the game.screen
+    game.screen = pygame.display.set_mode((game.SCREEN_W, game.SCREEN_H), flags) # Create the game.screen
 
 update_mode()
 
@@ -193,7 +195,6 @@ regenerate_world_tile()
 
 
 def focus_camera(e):
-
     game.camerax = game.CHAR_W / 2 - e.x
     game.cameraz = game.CHAR_H / 2 - e.z
 # Variables for the loop
@@ -205,9 +206,13 @@ curr_view = 'play' # if the player is in a menu, etc.
 
 tick = True
 
-# These two are to avoid having to redraw the game.screen every tick the game.screen is being resized
+# These two are to avoid having to redraw the screen every tick the game.screen is being resized
 videoResizeWasHappening = False
 timeSinceVideoResize = 0
+
+# Holding F11 behaviour
+screenResizedUsingF11 = False
+
 # Direction in a keypad 
 # 7 8 9
 # 4 5 6 # 5 means the game.player is standing still
@@ -216,23 +221,43 @@ direction = 5
 last_player_pos = game.player.pos
 dt = 0
 tt = 0
+tickc = 0
+
+console_kb = nonblockingchinput.KBHit()
+
+timeSinceKeyWasLastPressed = {}
+pygame.key.set_repeat(0)
+
+
 ################ MAIN LOOP ####################################
 while True:
     stime = perf_counter()
+    #if console_kb.kbhit():
+    #   print(console_kb.getch())
+    if 1:
+        keys = pygame.key.get_pressed()
+        if keys[K_RSHIFT]:
+            if keys[K_UP]:
+                game.CHAR_H -= 1
+            elif keys[K_DOWN]:
+                game.CHAR_H += 1
+            elif keys[K_LEFT]:
+                game.CHAR_W -= 1
+            elif keys[K_RIGHT]:
+                game.CHAR_W += 1
+            game.SCREEN_H = game.TILE_H * game.CHAR_H
+            game.SCREEN_W = game.TILE_W * game.CHAR_W
+            direction = 0
+            update_mode()
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
         elif event.type == VIDEORESIZE:
-            print('vresize')
             game.SCREEN_H = event.h
             game.SCREEN_W = event.w
             game.CHAR_H = int(game.SCREEN_H / game.TILE_H)
             game.CHAR_W = int(game.SCREEN_W / game.TILE_W)
-            print(game.CHAR_W)
-            print(event.w)
-            print(game.TILE_W)
-            print(game.SCREEN_W)
             videoResizeWasHappening = True
             timeSinceVideoResize = 0
             game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
@@ -241,20 +266,28 @@ while True:
                 if game.player.y == i.y:
                     i.print() 
         elif event.type == KEYDOWN:
-            if event.key == K_UP:
-                direction = 8
-            elif event.key == K_DOWN:
-                direction = 2
-            elif event.key == K_LEFT:
-                direction = 4
-            elif event.key == K_RIGHT:
-                direction = 6
-            tick = True
+            mods = pygame.key.get_mods()
+            timeSinceKeyWasLastPressed[event.key, mods] = tickc
+            if curr_view == 'play':
+                tick = True
+                if event.key == K_UP:
+                    direction = 8
+                elif event.key == K_DOWN:
+                    direction = 2
+                elif event.key == K_LEFT:
+                    direction = 4
+                elif event.key == K_RIGHT:
+                    direction = 6
+
         elif event.type == KEYUP:
             mods = pygame.key.get_mods()
+            try:
+                del timeSinceKeyWasLastPressed[event.key, mods]
+            except KeyError:
+                pass
             if event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
                 direction = 5
-            if mods & KMOD_SHIFT:
+            elif mods & KMOD_SHIFT:
                 if event.key == K_m:
                     # Map or travel
                     if curr_view != 'play':
@@ -265,24 +298,26 @@ while True:
                 if event.key == K_q:
                     print(game.player)
 
-            if event.key == K_F11:
-                game.IS_FULLSCREEN = not game.IS_FULLSCREEN
-                update_mode()
+            elif event.key == K_F11:
+                if not screenResizedUsingF11:
+                    #game.IS_FULLSCREEN = not game.IS_FULLSCREEN
+                    update_mode()
+                screenResizedUsingF11 = False
             if event.key == K_ESCAPE:
                 pygame.quit()
                 sys.exit()
     timeSinceVideoResize += 1
     if direction != 5 and game.MOVE_WHEN_HELD:
         tick = True
+        if timeSinceKeyWasLastPressed == {}:
+            direction = 5
     if timeSinceVideoResize > 10 and videoResizeWasHappening:
         tick = True
         videoResizeWasHappening = False
+    tickc += 1
     if curr_view == 'play': # Local view
         if tick:
             tile_at_player = game.entities[game.player.pos]
-            if tile_at_player == None:
-                print('You somehow got out of the map. You crashed the program')
-
             def move_player_according_to_direction(tile_at_player, last_player_pos):
                 if direction == 2:
                     game.player.z += 1
@@ -373,9 +408,11 @@ while True:
             game.char_notation_blit(game,'@', game.playerworldx, game.playerworldy)
             pygame.display.update()
     etime = perf_counter()
+    pygame.display.update()
     dt = (-1 / (((etime - stime))))
     tt = (etime - stime)
     tick = False
     if dt < 30:
         dt = 30
-    clock.tick(dt)
+    pygame.event.pump()
+    clock.tick(30)
