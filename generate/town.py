@@ -29,8 +29,9 @@ def main(entities):
 
 	for x in range(road_tiles[0],road_tiles[2]):
 		for z in range(road_tiles[1],road_tiles[3]):
-			new_entities.add(BaseEntity('+', x, entities.yproject(x, z), z, attrs = {'terrain'}))
-
+			new_entities.add(BaseEntity('+', x, entities.yproject(x, z), z, attrs = {}))
+			print(x, entities.yproject(x, z), z)
+	
 	# We'll have, on average, 6 tile houses
 	# The size will have gaussian distibution (google it)
 
@@ -52,6 +53,7 @@ def main(entities):
 	# Place houses alongside the road
 	# Negative side (8 if horizontal, 4 if vertical)
 	occupied_tiles = 0
+	print(posx, posz)
 	while occupied_tiles < sizeparallel:
 		house_size_parallel = int(random.gauss(HOUSE_W_AVG, HOUSE_W_STD))
 		house_size_tiles = random.gauss(HOUSE_SIZE_AVG, HOUSE_SIZE_STD)

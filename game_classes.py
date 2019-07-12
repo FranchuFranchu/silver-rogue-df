@@ -27,7 +27,7 @@ class Map:
             self.d[i.x,i.y,i.z] = i
 
     def yproject(self, x, z): # Finds a safe place to place a game.player, house, etc.
-        for i in sorted(list(filter(lambda e: e.x == x and e.z == z, self)),key = lambda a: a.y) :
+        for i in sorted(list(filter(lambda e: e.x == x and e.z == z, self)),key = lambda a: -a.y) :
             return i.y
 
     def __contains__(self,*items):
