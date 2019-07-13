@@ -19,17 +19,17 @@ class VariableDeclarations:
 		self.maph = 64
 
 		# Player position in local map
-		self.playerx = self.mapw / 2
+		self.playerx = self.mapw // 2
 		self.playery = 0
-		self.playerz = self.maph / 2
+		self.playerz = self.maph // 2
 
 		# Player position in the world
 		self.playerworldx = 2
 		self.playerworldy = 2
 
 		# Camera position
-		self.camerax = self.CHAR_W / 2
-		self.cameraz = self.CHAR_H / 2
+		self.camerax = self.CHAR_W // 2
+		self.cameraz = self.CHAR_H // 2
 
 		# Size in local maps of the whole world
 		# (the world is supposed to be round, not yet implemented)
