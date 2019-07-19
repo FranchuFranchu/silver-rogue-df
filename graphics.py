@@ -1,20 +1,24 @@
 import pygame
 import spritesheets
-from builtins import *
 # This should be imported after pygame is initialized
 
 # Gets the surface in the tileset for a specific character
 class GraphicsFeature:
+
+    def graphics_init(game):
+        game.sheet = spritesheets.spritesheet('tileset.png')
+
     def focus_camera(game, e):
-        game.camerax = game.CHAR_W / 2 - e.x
-        game.cameraz = game.CHAR_H / 2 - e.z
+        game.camerax = game.CHAR_W // 2 - e.x
+        game.cameraz = game.CHAR_H // 2 - e.z
+
     def update_mode(game):
         flags = 0
         flags |= pygame.FULLSCREEN if game.IS_FULLSCREEN else 0
         game.screen = pygame.display.set_mode((game.SCREEN_W, game.SCREEN_H), flags) # Create the game.screen
 
     def get_surf(game, pos, fgcol = 'W', bgcol = '0'):
-        if type(pos) == str:
+        if isinstance(pos, str):
             pos = ord(pos)
         fgcol = game.COLOR_MAP[fgcol]
         bgcol = game.COLOR_MAP[bgcol]
@@ -24,7 +28,7 @@ class GraphicsFeature:
         arr = pygame.PixelArray(surf)
         arr.replace((255,0,255), bgcol)
         arr.replace((255,255,255), fgcol)
-        del arr
+
         return surf
 
     # Prints a character at a tile
@@ -34,7 +38,7 @@ class GraphicsFeature:
 
     # Converts color notation to a (char, fg, bg) tuple
     def char_not_to_cfg(game, col):
-        if type(col) == int:
+        if isinstance(col, int):
             return col, 'W', '0'
 
         k = col.split(':')
@@ -46,18 +50,18 @@ class GraphicsFeature:
             return (k[1],k[0],'0')
         elif len(k) == 3:
             return (k[2],k[0], k[1])
+
     # Calls blit_char_at, but uses color notation
     def char_notation_blit(game, col, tx, ty):
         cfg = game.char_not_to_cfg(col)
         tx = int(tx)
         ty = int(ty)
-        if type(cfg[0]) == int:
-            game.blit_char_at(game, cfg[0], tx, ty, cfg[1], cfg[2])
+        if isinstance(cfg[0], int):
+            game.blit_char_at(cfg[0], tx, ty, cfg[1], cfg[2])
         else:
             for x, char in zip( 
                 range(tx, tx + len(cfg[0])), 
                 cfg[0] 
                 ):
                 game.blit_char_at(char, x, ty, cfg[1], cfg[2])
-    def graphics_init(game):
-        game.sheet = spritesheets.spritesheet('tileset.png')
+

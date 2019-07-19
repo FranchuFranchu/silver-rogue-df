@@ -1,7 +1,9 @@
-from noise import snoise2
-from game_classes import BaseEntity, Map
 from random import choice, randint
 import random
+
+from noise import snoise2
+from game_classes import BaseEntity, Map
+
 
 def main(entities):
 	new_entities = Map()
@@ -29,10 +31,9 @@ def main(entities):
 
 	for x in range(road_tiles[0],road_tiles[2]):
 		for z in range(road_tiles[1],road_tiles[3]):
-			new_entities.add(BaseEntity('+', x, entities.yproject(x, z), z, attrs = {}))
-			print(x, entities.yproject(x, z), z)
-	
-	# We'll have, on average, 6 tile houses
+			new_entities.add(BaseEntity('+', x, entities.yproject(x, z), z))
+
+	# We'll have, on average, 6 tile wide houses
 	# The size will have gaussian distibution (google it)
 
 	# More compact and densely inhabitated towns should have thinner houses, but we'll do that later
@@ -92,8 +93,11 @@ def main(entities):
 			 house_size_perpendicular,
 			 house_size_parallel, door_direction = 4)
 
-
+	for k, v in new_entities.d.items():
+		v.attrs.add('town')
 	return new_entities
+
+
 def house(entities, x, z, w, h, door_direction):
 	new_entities = Map()
 
@@ -124,17 +128,17 @@ def house(entities, x, z, w, h, door_direction):
 				doory = entities.yproject(x + w, i)
 
 	y = doory	
-	# Make the floor
+	# Make the road
 
 	for i in range(x, x + w):
 		for j in range(z, z + h):
-			new_entities.add(BaseEntity('+', i, y, j, draw_index = -2, attrs = {}))
+			new_entities.add(BaseEntity('+', i, y, j, draw_index = -2))
+
 
 	# Make the walls!
 	for i in range(x, x + w):
 		new_entities.add(BaseEntity(0xC4, i, y, z, draw_index = 2, passable = False))
 		new_entities.add(BaseEntity(0xC4, i, y, z + h, draw_index = 2, passable = False))
-
 
 	for i in range(z, z + h):
 		new_entities.add(BaseEntity(0xB3, x, y, i, draw_index = 2, passable = False))
