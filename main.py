@@ -138,7 +138,6 @@ class MainGame(
         game.curr_view = 'play' # if the player is in a menu, etc.
 
         game.tick = True
-
         # These two are to avoid having to redraw the screen every game.tick the game.screen is being resized
         videoResizeWasHappening = False
         timeSinceVideoResize = 0
