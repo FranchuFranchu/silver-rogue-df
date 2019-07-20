@@ -28,7 +28,7 @@ class BindingFeature:
 
     def handleBindingUp(game, event):
         name = KEY_NAMES[event.key].upper()
-        viewBindings = game.bindings[game.view]
+        viewBindings = {**game.bindings[game.view], **game.bindings['*']}
         for i in filter(lambda i: name in i.split('-'),viewBindings.keys()):
             i = i.upper()
             comb = i
@@ -46,7 +46,7 @@ class BindingFeature:
     def handleBindingDown(game, event):
         game.pressed[event.key] = True
         name = KEY_NAMES[event.key]
-        viewBindings = game.dBindings[game.view]
+        viewBindings = {**game.dBindings[game.view], **game.dBindings['*']}
         for i in filter(lambda i: name in i.split('-'),viewBindings.keys()):
             i = i.upper()
             comb = i
@@ -61,7 +61,7 @@ class BindingFeature:
 
     def listHeldBindings(game): # Return a list of functions that need to be run now
         functions = []
-        viewBindings = game.heldBindings[game.view]
+        viewBindings = {**game.heldBindings[game.view], **game.heldBindings['*']}
         for key in game.pressed.keys():
             if type(key) == int:
                 key = KEY_NAMES[key]

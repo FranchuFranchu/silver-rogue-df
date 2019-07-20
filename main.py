@@ -30,7 +30,49 @@ class GameObjectFeature:
         game.player.y = game.entities.yproject(game.player.x, game.player.z)
         game.entities.add(game.player)
 
+class PlayViewTickFeature:
+    def playv_tick(game):
+        if game.tile_at_player == None:
+            # skip graphics game.tick
+           return
 
+        if type(game.tile_at_player) == tuple:
+            if game.tile_at_player[1] == 'a':
+                # The player has encountered a cliff
+                game.tile_at_player = game.tile_at_player[0]
+                game.focus_camera(game.player)
+
+        # Move camera
+        game.focus_camera(game.player)
+        
+        game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
+        game.screen.fill((0,0,0)) # TODO only redraw everything if the game.camera has moved
+        for i in game.entities:
+            
+            if game.player.y == i.y:
+                i.print() 
+        game.char_notation_blit('@', game.camerax + game.player.x , game.player.z + game.cameraz)
+            
+        game.last_player_pos = game.tile_at_player.x, game.tile_at_player.y, game.tile_at_player.z
+
+class VideoResizeHandlerFeature:
+    def handle_video_resize(game, event):
+        game.SCREEN_H = event.h
+        game.SCREEN_W = event.w
+        game.CHAR_H = int(game.SCREEN_H / game.TILE_H)
+        game.CHAR_W = int(game.SCREEN_W / game.TILE_W)
+        videoResizeWasHappening = True
+        timeSinceVideoResize = 0
+        game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
+        game.update_mode()
+        for i in game.entities:
+            if game.player.y == i.y:
+                i.print() 
+
+class ViewSwitchFunctionsFeature:
+    # Functions to switch between Views using lambdas
+    def setView(game, view):
+        game.curr_view = view
 
 class MainGame(
     VariableDeclarations,
@@ -38,7 +80,8 @@ class MainGame(
     BindingFeature,
     GameObjectFeature,
     ScreenResizingFeature,
-
+    ViewSwitchFunctionsFeature,
+    PlayViewTickFeature
     ):
     def init(self):
         pygame.display.init()
@@ -57,31 +100,34 @@ class MainGame(
         self.player = Entity(self, '@', 0, 0, 0)
         
         self.regenerate_world_tile()
-        self.bind('play',  'rshift-up',   self.resizeScreen, 8)
-        self.bind('play',  'rshift-down', self.resizeScreen, 2)
-        self.bind('play',  'rshift-right',self.resizeScreen, 6)
-        self.bind('play',  'rshift-left', self.resizeScreen, 4)
-        self.hbind('play', 'rshift-up',   self.addScreen, 8)
-        self.hbind('play', 'rshift-down', self.addScreen, 2)
-        self.hbind('play', 'rshift-right',self.addScreen, 6)
-        self.hbind('play', 'rshift-left', self.addScreen, 4)
+        self.bind('*',  'rshift-up',   self.resizeScreen, 8)
+        self.bind('*',  'rshift-down', self.resizeScreen, 2)
+        self.bind('*',  'rshift-right',self.resizeScreen, 6)
+        self.bind('*',  'rshift-left', self.resizeScreen, 4)
+        self.hbind('*', 'rshift-up',   self.addScreen, 8)
+        self.hbind('*', 'rshift-down', self.addScreen, 2)
+        self.hbind('*', 'rshift-right',self.addScreen, 6)
+        self.hbind('*', 'rshift-left', self.addScreen, 4)
         self.hbind('play', 'up',   self.movePlayerAccordingToDirection, 8)
         self.hbind('play', 'down', self.movePlayerAccordingToDirection, 2)
         self.hbind('play', 'right',self.movePlayerAccordingToDirection, 6)
         self.hbind('play', 'left', self.movePlayerAccordingToDirection, 4)
         self.bind('play', 'p',    lambda g: print(g.player, g.tile_at_player), self)
+        self.bind('play', 'l', lambda: self.setView('look'))
         self.tile_at_player = self.entities[0, self.entities.yproject(0,0), 0]
+
     def movePlayerAccordingToDirection(game, direction):
+        game.direction = direction
         game.tile_at_player = game.entities[game.player.pos]
-        if direction == 2:
+        if game.direction == 2:
             game.player.z += 1
-        if direction == 4:
+        if game.direction == 4:
             game.player.x -= 1
             
-        if direction == 6:
+        if game.direction == 6:
             game.player.x += 1
             
-        if direction == 8:
+        if game.direction == 8:
             game.player.z -= 1
 
 
@@ -91,7 +137,7 @@ class MainGame(
             return game.tile_at_player, 'a'
 
 
-        if direction != 5:
+        if game.direction != 5:
             game.player.y += game.tile_at_player.slope
         if game.entities[game.player.x, game.player.y, game.player.z]:
             if game.entities[game.player.x, game.player.y, game.player.z].passable == False:
@@ -116,7 +162,7 @@ class MainGame(
             game.player.z = 0
             game.regenerate_world_tile(game.player.x, game.player.z)
 
-        # Trick to undo game.player Y movement if game.player stepped from a slope in the reverse direction
+        # Trick to undo game.player Y movement if game.player stepped from a slope in the reverse game.direction
         if game.entities[game.player.x, game.player.y, game.player.z] == None:
             if game.tile_at_player.slope != 0:
                 game.player.y -= game.tile_at_player.slope
@@ -126,7 +172,7 @@ class MainGame(
         # Trick to undo game.player Y movement if the game.player is walking parallel to the slope
         if game.entities[game.player.x, game.player.y, game.player.z].slope == game.tile_at_player.slope:
             return game.tile_at_player
-            if direction != 5:
+            if game.direction != 5:
                 game.player.y -= game.tile_at_player.slope
         return game.tile_at_player
 
@@ -149,7 +195,7 @@ class MainGame(
         # 7 8 9
         # 4 5 6 # 5 means the game.player is standing still
         # 1 2 3
-        direction = 5
+        game.direction = 5
         game.last_player_pos = game.player.pos
         dt = 0
         tt = 0
@@ -165,27 +211,20 @@ class MainGame(
         ################ MAIN LOOP ####################################
         while True:
             stime = perf_counter()
+
             #if console_kb.kbhit():
             #   print(console_kb.getch())
+
             for i in game.listHeldBindings():
-                
                 i()
+
+            # Handle events
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
                     sys.exit()
                 elif event.type == VIDEORESIZE:
-                    game.SCREEN_H = event.h
-                    game.SCREEN_W = event.w
-                    game.CHAR_H = int(game.SCREEN_H / game.TILE_H)
-                    game.CHAR_W = int(game.SCREEN_W / game.TILE_W)
-                    videoResizeWasHappening = True
-                    timeSinceVideoResize = 0
-                    game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
-                    game.update_mode()
-                    for i in game.entities:
-                        if game.player.y == i.y:
-                            i.print() 
+                    self.handle_video_resize()
                 elif event.type == KEYDOWN:
                     game.handleBindingDown(event)
                 elif event.type == KEYUP:
@@ -194,44 +233,17 @@ class MainGame(
                         pygame.quit()
                         sys.exit()
             timeSinceVideoResize += 1
-            if direction != 5 and game.MOVE_WHEN_HELD:
+
+            if game.direction != 5 and game.MOVE_WHEN_HELD:
                 game.tick = True
                 if timeSinceKeyWasLastPressed == {}:
-                    direction = 5
+                    game.direction = 5
             if timeSinceVideoResize > 10 and videoResizeWasHappening:
                 game.tick = True
                 videoResizeWasHappening = False
             game.tickc += 1
             if game.curr_view == 'play': # Local view
-                if game.tick:
-                    if game.tile_at_player == None:
-                        # skip graphics game.tick
-                        continue
-
-                    if type(game.tile_at_player) == tuple:
-                        if game.tile_at_player[1] == 'a':
-                            # The player has encountered a cliff
-                            game.tile_at_player = game.tile_at_player[0]
-                            game.focus_camera(game.player)
-
-                if game.tick: # Graphics game.tick, redraw and stuff. Split it from the main game.tick when the game gets too large
-                    # Move camera
-                    game.focus_camera(game.player)
-                    
-                    game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
-                    game.screen.fill((0,0,0)) # TODO only redraw everything if the game.camera has moved
-                    for i in game.entities:
-                        
-                        if game.player.y == i.y:
-                            i.print() 
-                    game.char_notation_blit('@', game.camerax + game.player.x , game.player.z + game.cameraz)
-                        
-                    game.char_notation_blit('FPS - ' + str(dt)[:5],0, 0)
-                    game.char_notation_blit('Time taken - ' + str(tt)[:5],0, 1)
-                    pygame.display.update()
-
-                if game.tick:
-                    game.last_player_pos = game.tile_at_player.x, game.tile_at_player.y, game.tile_at_player.z
+                game.playv_tick()
             elif game.curr_view == 'map':
                 if game.tick:
                     for i in world:
@@ -239,7 +251,11 @@ class MainGame(
                     game.char_notation_blit('@', game.playerworldx, game.playerworldy)
                     pygame.display.update()
             etime = perf_counter()
-            pygame.display.update()
+            if game.tick:
+
+                game.char_notation_blit('FPS - ' + str(dt)[:5],0, 0)
+                game.char_notation_blit('Time taken - ' + str(tt)[:5],0, 1)
+                pygame.display.update()
             dt = (-1 / (((etime - stime))))
             tt = (etime - stime)
             game.tick = False

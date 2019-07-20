@@ -67,16 +67,19 @@ class VariableDeclarations:
         self.bindings = {
             'play': {
 
-            }
+            }, 
+            '*': {}
         }
         self.dBindings = {
             'play': {
 
-            }
+            }, 
+            '*': {}
         }
 
         self.heldBindings = {
             'play': {
             
-            }
+            }, 
+            '*': {}
         }

@@ -130,20 +130,25 @@ def house(entities, x, z, w, h, door_direction):
 	y = doory	
 	# Make the road
 
-	for i in range(x, x + w):
-		for j in range(z, z + h):
+	for i in range(x + 1, x + w):
+		for j in range(z + 1, z + h):
 			new_entities.add(BaseEntity('+', i, y, j, draw_index = -2))
 
 
 	# Make the walls!
-	for i in range(x, x + w):
+	for i in range(x + 1, x + w):
 		new_entities.add(BaseEntity(0xC4, i, y, z, draw_index = 2, passable = False))
 		new_entities.add(BaseEntity(0xC4, i, y, z + h, draw_index = 2, passable = False))
 
-	for i in range(z, z + h):
+	for i in range(z + 1, z + h):
 		new_entities.add(BaseEntity(0xB3, x, y, i, draw_index = 2, passable = False))
 		new_entities.add(BaseEntity(0xB3, x + w, y, i, draw_index = 2, passable = False))
 
+		# Corners
+	new_entities.add(BaseEntity(0xBF, x + w, y,  z, draw_index = 2, passable = False))
+	new_entities.add(BaseEntity(0xC0, x, y, z + h, draw_index = 2, passable = False))
+	new_entities.add(BaseEntity(0xDA, x, y,  z, draw_index = 2, passable = False))
+	new_entities.add(BaseEntity(0xD9, x + w, y, z + h, draw_index = 2, passable = False))
 	# We also need a door!
 	new_entities.add(BaseEntity('+', doorx, y, doorz, draw_index = -2))
 
