@@ -1,4 +1,4 @@
-from game_classes import BaseEntity, Map
+from game_classes import BaseMapTile, Map
 from autoclass import autoclass
 import random
 import generate
@@ -11,19 +11,19 @@ import copy
 def Grass(game, x,y,z):
     ch = random.choice([',','\'','"'])
     ch = 'G:0:' + ch
-    e = Entity(game, ch, x, y, z, True, -10)
+    e = MapTile(game, ch, x, y, z, True, -10)
     e.attrs.add('terrain')
     return e
 
-class Entity(BaseEntity):
+class MapTile(BaseMapTile):
     def __init__(self, game, *args, **kwargs):
         if len(args) == 1 and kwargs == {}:
-            if type(args[0]) == BaseEntity:
+            if type(args[0]) == BaseMapTile:
                 e = args[0]
                 self.char , self.x , self.y , self.z , self.passable , self.draw_index , self.slope , self.attrs =  e.char , e.x , e.y , e.z , e.passable , e.draw_index , e.slope , e.attrs 
                 
         self.game = game
-        BaseEntity.__init__(self, *args, **kwargs)
+        BaseMapTile.__init__(self, *args, **kwargs)
 
     def print(self):
         #log(self.x,self.y,self.z)
@@ -65,7 +65,7 @@ class WorldTile:
             self.site = generate.town.Town()
             t_gened = self.site.gen(new_entities)
             for i in t_gened:
-                new_entities.add(Entity(self.game, i))
+                new_entities.add(MapTile(self.game, i))
 
         # Generate slopes in the terrain "cliffs"
         for i in filter(lambda x: 'terrain' in x.attrs, new_entities.d.values()):

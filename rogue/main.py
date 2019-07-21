@@ -12,8 +12,8 @@ import spritesheets
 import generate
 import nonblockingchinput
 # Import classes
-from game_classes import BaseEntity, Map
-from drawable_game_classes import Entity, World, WorldTile
+from game_classes import BaseMapTile, Map
+from drawable_game_classes import MapTile, World, WorldTile
 # Import features
 from variable_declarations import VariableDeclarations
 from graphics import GraphicsFeature
@@ -56,7 +56,7 @@ class PlayViewTickFeature:
 class LookingFeature:
     def lookv_tick(game):
         if not hasattr(game, 'cursor_e'):
-            game.cursor_e = Entity(game, 'X', game.player.x, game.player.y, game.player.z)
+            game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z)
 
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
         game.screen.fill((0,0,0))
@@ -157,7 +157,7 @@ class MainGame(
 
         self.world = World(wtiles,seed = 1)
         self.world[2,2].town = True
-        self.player = Entity(self, '@', 0, 0, 0)
+        self.player = MapTile(self, '@', 0, 0, 0)
         
         self.regenerate_world_tile()
         self.bind('*',  'rshift-up',   self.resizeScreen, 8)

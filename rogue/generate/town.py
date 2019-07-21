@@ -2,13 +2,13 @@ from random import choice, randint
 import random
 
 from noise import snoise2
-from game_classes import BaseEntity, Map, Site
+from game_classes import BaseMapTile, Map, Site
 
 class Town(Site):
 	roads: list
 	def __init__(self, entities = Map()):
 		self.roads = [Road(entities)]
-	def gen(self, entities):
+	def gen(self, entities = Map()):
 		new_entities = Map()
 		for road in self.roads:
 			new_entities += road.gen(entities)
@@ -108,7 +108,7 @@ class Road:
 
 		for x in range(road_tiles[0],road_tiles[2]):
 			for z in range(road_tiles[1],road_tiles[3]):
-				new_entities.add(BaseEntity('+', x, entities.yproject(x, z), z))
+				new_entities.add(BaseMapTile('+', x, entities.yproject(x, z), z))
 
 		# We'll have, on average, 6 tile wide houses
 		# The size will have gaussian distibution (google it)
@@ -185,25 +185,25 @@ class House:
 
 		for i in range(x + 1, x + w):
 			for j in range(z + 1, z + h):
-				new_entities.add(BaseEntity('+', i, y, j, draw_index = -2))
+				new_entities.add(BaseMapTile('+', i, y, j, draw_index = -2))
 
 
 		# Make the walls!
 		for i in range(x + 1, x + w):
-			new_entities.add(BaseEntity(0xC4, i, y, z, draw_index = 2, passable = False))
-			new_entities.add(BaseEntity(0xC4, i, y, z + h, draw_index = 2, passable = False))
+			new_entities.add(BaseMapTile(0xC4, i, y, z, draw_index = 2, passable = False))
+			new_entities.add(BaseMapTile(0xC4, i, y, z + h, draw_index = 2, passable = False))
 
 		for i in range(z + 1, z + h):
-			new_entities.add(BaseEntity(0xB3, x, y, i, draw_index = 2, passable = False))
-			new_entities.add(BaseEntity(0xB3, x + w, y, i, draw_index = 2, passable = False))
+			new_entities.add(BaseMapTile(0xB3, x, y, i, draw_index = 2, passable = False))
+			new_entities.add(BaseMapTile(0xB3, x + w, y, i, draw_index = 2, passable = False))
 
 			# Corners
-		new_entities.add(BaseEntity(0xBF, x + w, y,  z, draw_index = 2, passable = False))
-		new_entities.add(BaseEntity(0xC0, x, y, z + h, draw_index = 2, passable = False))
-		new_entities.add(BaseEntity(0xDA, x, y,  z, draw_index = 2, passable = False))
-		new_entities.add(BaseEntity(0xD9, x + w, y, z + h, draw_index = 2, passable = False))
+		new_entities.add(BaseMapTile(0xBF, x + w, y,  z, draw_index = 2, passable = False))
+		new_entities.add(BaseMapTile(0xC0, x, y, z + h, draw_index = 2, passable = False))
+		new_entities.add(BaseMapTile(0xDA, x, y,  z, draw_index = 2, passable = False))
+		new_entities.add(BaseMapTile(0xD9, x + w, y, z + h, draw_index = 2, passable = False))
 		# We also need a door!
-		new_entities.add(BaseEntity('+', doorx, y, doorz, draw_index = -2))
+		new_entities.add(BaseMapTile('+', doorx, y, doorz, draw_index = -2))
 
 		return new_entities
 

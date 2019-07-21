@@ -1,5 +1,6 @@
 # A dwarf-fortress adventure mode-inspired rogue-like Pygame Python3 game
 On heavily development, especially the name
+https://franchufranchu.itch.io/rogue
 
 ## Requirements
 	python>=3.0
@@ -11,6 +12,10 @@ All of them can be pip installed
 
 ## Controls
 	Arrow keys: Move
+	
+## Some clarifications of the code
+Volume is measured in liters.
+A map tile fits 3 cubic meters or 3k liters
 
 ## Editing the tileset
 I use GIMP to edit the tileset. Go to Image -> Configure grid and make it 12x12

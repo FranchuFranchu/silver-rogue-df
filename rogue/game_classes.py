@@ -1,9 +1,9 @@
 from autoclass import autoclass
 import copy
 @autoclass
-class BaseEntity:
+class BaseMapTile:
     def __init__(self, char = ' ', x = 0, y = 0, z = 0, passable = True, draw_index = 0, slope = 0, attrs = None):
-        if isinstance(char, BaseEntity):
+        if isinstance(char, BaseMapTile):
             e = char
             self.char , self.x , self.y , self.z , self.passable , self.draw_index , self.slope , self.attrs =  e.char , e.x , e.y , e.z , e.passable , e.draw_index , e.slope , e.attrs 
         if attrs == None:  
@@ -19,7 +19,7 @@ class BaseEntity:
     def copy(self, alloc):
         return self.__class__(alloc)
 # Class for the map, works like a set/dict and iterator
-# It's more like a "Specialized Entity array"
+# It's more like a "Specialized MapTile array"
 class Map:
     def __init__(self, entities = None):
         entities = entities or list()
@@ -30,7 +30,7 @@ class Map:
 
         elif hasattr(entities, '__iter__'):
             for e in entities:
-                #alloc = BaseEntity()
+                #alloc = BaseMapTile()
                 self.d[e.x, e.y, e.z] = e# = e.copy(alloc)
 
     def add(self, *entities):
@@ -80,3 +80,8 @@ class HistoricalEntity:
 
 class Site:
     pass
+
+@autoclass
+class BaseEntity:
+    def __init__(self, char = ' ', x = 0, y = 0, z = 0, volume = 75, draw_index = 0, attrs = None):
+        pass
