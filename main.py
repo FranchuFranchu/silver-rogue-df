@@ -174,6 +174,7 @@ class MainGame(
         self.hbind('play', 'left', self.movePlayerAccordingToDirection, 4)
         self.bind('play', 'p',    lambda g: print(g.player, g.tile_at_player), self)
         self.bind('play', 'l', partial(self.setView, 'look'))
+        self.bind('look', 'l', partial(self.setView, 'play'))
         self.hbind('look', 'up',   self.move_cursor, 8)
         self.hbind('look', 'down', self.move_cursor, 2)
         self.hbind('look', 'right',self.move_cursor, 6)

@@ -48,7 +48,7 @@ class VariableDeclarations:
         #   - Examples:
         #       - R:@ = Red "@"
         #       - B:G:w = Blue "w" with a green background
-        #       - Y: 2741 = a yellow Unicode 0x2741: Flower emoji
+        #       - Y: 2741 = a yellow Unicode 0x2741: Flower emoji (of course there is no flower in the tileset :)
 
         self.COLOR_MAP = {
             "0": (0,0,0),
