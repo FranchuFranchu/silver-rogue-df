@@ -62,7 +62,8 @@ class WorldTile:
 
         # Add the town contents
         if self.town:
-            t_gened = generate.town.main(new_entities)
+            self.site = generate.town.Town()
+            t_gened = self.site.gen(new_entities)
             for i in t_gened:
                 new_entities.add(Entity(self.game, i))
 

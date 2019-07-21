@@ -74,3 +74,9 @@ class Map:
     def __add__(self, other):
         return Map({**self.d, **other.d})
 
+class HistoricalEntity:
+    # Saves entities when they aren't loaded
+    name = ''
+
+class Site:
+    pass

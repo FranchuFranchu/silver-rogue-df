@@ -334,19 +334,17 @@ class MainGame(
                         i.print()
                     game.char_notation_blit('@', game.playerworldx, game.playerworldy)
                     pygame.display.update()
-            etime = perf_counter()
             if game.tick:
 
                 game.char_notation_blit('FPS - ' + str(dt)[:5],0, 0)
                 game.char_notation_blit('Time taken - ' + str(tt)[:5],0, 1)
                 pygame.display.update()
-            dt = (-1 / (((etime - stime))))
+            pygame.event.pump()
+            etime = perf_counter()
+            dt = (1 / (1 / 20 - ((etime - stime)))) 
             tt = (etime - stime)
             game.tick = False
-            if dt < 30:
-                dt = 30
-            pygame.event.pump()
-            clock.tick(30)
+            clock.tick(dt)
 
 
 if __name__ == '__main__':
