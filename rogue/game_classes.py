@@ -19,7 +19,7 @@ class BaseMapTile:
     def copy(self, alloc):
         return self.__class__(alloc)
 # Class for the map, works like a set/dict and iterator
-# It's more like a "Specialized MapTile array"
+
 class Map:
     def __init__(self, entities = None):
         entities = entities or list()
@@ -85,3 +85,4 @@ class Site:
 class BaseEntity:
     def __init__(self, char = ' ', x = 0, y = 0, z = 0, volume = 75, draw_index = 0, attrs = None):
         pass
+    
