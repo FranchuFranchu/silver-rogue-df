@@ -12,6 +12,10 @@ class BaseEntity:
     def pos(self):
         return self.x, self.y, self.z
 
+    @property
+    def xz(self):
+        return self.x, self.z
+
     def copy(self, alloc):
         return self.__class__(alloc)
 # Class for the map, works like a set/dict and iterator

@@ -2,13 +2,11 @@ import random
 import math
 from time import perf_counter
 from itertools import product
+from functools import partial
 
 import pygame, sys
 from pygame.locals import *
 from autoclass import autoclass
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-import numpy as np
 
 import spritesheets
 import generate
@@ -55,6 +53,43 @@ class PlayViewTickFeature:
             
         game.last_player_pos = game.tile_at_player.x, game.tile_at_player.y, game.tile_at_player.z
 
+class LookingFeature:
+    def lookv_tick(game):
+        if not hasattr(game, 'cursor_e'):
+            game.cursor_e = Entity(game, 'X', game.player.x, game.player.y, game.player.z)
+
+        game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
+        game.screen.fill((0,0,0))
+        for i in game.entities:
+            
+            if game.cursor_e.y == i.y:
+                i.print() 
+
+        game.cursor_e.print()
+        
+    def move_cursor(game, direction):
+        print(direction)
+        game.direction = direction
+        game.tick = True
+        game.focus_camera(game.cursor_e)
+
+        if game.direction == 2:
+            game.cursor_e.z += 1
+        if game.direction == 4:
+            game.cursor_e.x -= 1
+            
+        if game.direction == 6:
+            game.cursor_e.x += 1
+            
+        if game.direction == 8:
+            game.cursor_e.z -= 1
+
+        if game.direction == 10:
+            game.cursor_e.y -= 1
+
+        elif game.direction == 11:
+            game.cursor_e.y += 1
+
 class VideoResizeHandlerFeature:
     def handle_video_resize(game, event):
         game.SCREEN_H = event.h
@@ -73,6 +108,7 @@ class ViewSwitchFunctionsFeature:
     # Functions to switch between Views using lambdas
     def setView(game, view):
         game.curr_view = view
+        print('!', game.curr_view)
 
 class MainGame(
     VariableDeclarations,
@@ -81,7 +117,8 @@ class MainGame(
     GameObjectFeature,
     ScreenResizingFeature,
     ViewSwitchFunctionsFeature,
-    PlayViewTickFeature
+    PlayViewTickFeature,
+    LookingFeature
     ):
     def init(self):
         pygame.display.init()
@@ -113,10 +150,17 @@ class MainGame(
         self.hbind('play', 'right',self.movePlayerAccordingToDirection, 6)
         self.hbind('play', 'left', self.movePlayerAccordingToDirection, 4)
         self.bind('play', 'p',    lambda g: print(g.player, g.tile_at_player), self)
-        self.bind('play', 'l', lambda: self.setView('look'))
+        self.bind('play', 'l', partial(self.setView, 'look'))
+        self.hbind('look', 'up',   self.move_cursor, 8)
+        self.hbind('look', 'down', self.move_cursor, 2)
+        self.hbind('look', 'right',self.move_cursor, 6)
+        self.hbind('look', 'left', self.move_cursor, 4)
+        self.hbind('look', 'less-than sign',self.move_cursor, 10)
+        self.hbind('look', 'greater-than sign', self.move_cursor, 11)
         self.tile_at_player = self.entities[0, self.entities.yproject(0,0), 0]
 
     def movePlayerAccordingToDirection(game, direction):
+        print(direction)
         game.direction = direction
         game.tile_at_player = game.entities[game.player.pos]
         if game.direction == 2:
@@ -206,7 +250,7 @@ class MainGame(
         timeSinceKeyWasLastPressed = {}
         pygame.key.set_repeat(0)
 
-        game.view = 'play'
+        game.curr_view = 'play'
         game.pressed = {}
         ################ MAIN LOOP ####################################
         while True:
@@ -238,12 +282,15 @@ class MainGame(
                 game.tick = True
                 if timeSinceKeyWasLastPressed == {}:
                     game.direction = 5
+
             if timeSinceVideoResize > 10 and videoResizeWasHappening:
                 game.tick = True
                 videoResizeWasHappening = False
             game.tickc += 1
             if game.curr_view == 'play': # Local view
                 game.playv_tick()
+            elif game.curr_view == 'look':
+                game.lookv_tick()
             elif game.curr_view == 'map':
                 if game.tick:
                     for i in world:
