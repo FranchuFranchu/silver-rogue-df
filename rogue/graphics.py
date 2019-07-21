@@ -6,7 +6,7 @@ import spritesheets
 class GraphicsFeature:
 
     def graphics_init(game):
-        game.sheet = spritesheets.spritesheet('tileset.png')
+        game.sheet = spritesheets.spritesheet('../resource/tileset.png')
 
     def focus_camera(game, e):
         game.camerax = game.CHAR_W // 2 - e.x

@@ -15,6 +15,7 @@ while IFS= read -r line; do
 done < "./requirements.txt"
 if [ $all_modules_installed -eq 1 ]  
 then
+	cd rogue
 	python3 main.py
 fi
 
