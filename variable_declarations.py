@@ -1,3 +1,5 @@
+from platform import system
+from os.path import expandvars
 class VariableDeclarations:
     def init_vars(self):
         self.IS_FULLSCREEN = False
@@ -90,3 +92,10 @@ class VariableDeclarations:
 
         }
         self.TAP_HOLD_THRESHOLD = 5 # Time needed for a key to be pressed until it is considered a "held" key
+        if system() == 'Windows':
+            self.saveLocation = expandvars('%LOCALAPPDATA%\\FF\\rogue\\')
+        elif system() == 'Darwin': # Mac
+            self.saveLocation = expandvars('$HOME/Library/Application Support/FF/rogue')
+        elif system() == 'Linux':
+            self.saveLocation = expandvars('$HOME/.local/share/FF-rogue')
+        print("Save folder is", self.saveLocation)
