@@ -68,7 +68,6 @@ class LookingFeature:
         game.cursor_e.print()
         
     def move_cursor(game, direction):
-        print(direction)
         game.direction = direction
         game.tick = True
         game.focus_camera(game.cursor_e)
@@ -155,12 +154,11 @@ class MainGame(
         self.hbind('look', 'down', self.move_cursor, 2)
         self.hbind('look', 'right',self.move_cursor, 6)
         self.hbind('look', 'left', self.move_cursor, 4)
-        self.hbind('look', 'less-than sign',self.move_cursor, 10)
-        self.hbind('look', 'greater-than sign', self.move_cursor, 11)
+        self.hbind('look', 'less',self.move_cursor, 10)
+        self.hbind('look', 'greater', self.move_cursor, 11)
         self.tile_at_player = self.entities[0, self.entities.yproject(0,0), 0]
 
     def movePlayerAccordingToDirection(game, direction):
-        print(direction)
         game.direction = direction
         game.tile_at_player = game.entities[game.player.pos]
         if game.direction == 2:
@@ -239,6 +237,8 @@ class MainGame(
         # 7 8 9
         # 4 5 6 # 5 means the game.player is standing still
         # 1 2 3
+        # 10 is down
+        # 11 is up
         game.direction = 5
         game.last_player_pos = game.player.pos
         dt = 0
@@ -256,8 +256,17 @@ class MainGame(
         while True:
             stime = perf_counter()
 
-            #if console_kb.kbhit():
-            #   print(console_kb.getch())
+            if console_kb.kbhit():
+                ch = console_kb.getch()
+                print(ch, end = '')
+                sys.stdout.flush()
+                if ch == '\n':
+                    if game.currcmd == 'exit':
+                        pygame.quit()
+                        sys.exit()
+                    game.currcmd = ''
+                else:
+                    game.currcmd += ch
 
             for i in game.listHeldBindings():
                 i()

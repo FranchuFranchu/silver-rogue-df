@@ -83,3 +83,6 @@ class VariableDeclarations:
             }, 
             '*': {}
         }
+
+        # Command line
+        self.currcmd = ''
