@@ -89,6 +89,29 @@ class LookingFeature:
         elif game.direction == 11:
             game.cursor_e.y += 1
 
+class GameToStringFeature:
+    def game_to_string(game, where = '', depth = 1, tab = 1):
+        d = game.__dict__.copy()
+        if where != '':
+
+            d = d[where]
+        s = ''
+
+        if isinstance(d, list):
+            ditems = enumerate(d)
+        elif isinstance(d, dict):
+            ditems = d.items()
+        for k, v in ditems:
+            s += '\t' * tab + str(k) + ': '
+            if isinstance(v, dict) or isinstance(v, list):
+                if depth <= 1:
+                    s += ' <...>'
+                else:
+                    s += game.game_to_string(k, depth - 1, tab + 1)
+            else:
+                s += str(v) 
+            s += ',\n'
+        return s
 class VideoResizeHandlerFeature:
     def handle_video_resize(game, event):
         game.SCREEN_H = event.h
@@ -117,7 +140,8 @@ class MainGame(
     ScreenResizingFeature,
     ViewSwitchFunctionsFeature,
     PlayViewTickFeature,
-    LookingFeature
+    LookingFeature,
+    GameToStringFeature
     ):
     def init(self):
         pygame.display.init()
@@ -264,6 +288,9 @@ class MainGame(
                     if game.currcmd == 'exit':
                         pygame.quit()
                         sys.exit()
+                    gargs = game.currcmd.split(' ')
+                    if gargs[0] == 'p':
+                        print(game.game_to_string())
                     game.currcmd = ''
                 else:
                     game.currcmd += ch

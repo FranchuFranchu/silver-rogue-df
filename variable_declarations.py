@@ -86,3 +86,7 @@ class VariableDeclarations:
 
         # Command line
         self.currcmd = ''
+        self.timeSinceHeldBindingWasPressed = {
+
+        }
+        self.TAP_HOLD_THRESHOLD = 5 # Time needed for a key to be pressed until it is considered a "held" key

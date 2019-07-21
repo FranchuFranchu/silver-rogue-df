@@ -51,9 +51,10 @@ class BindingFeature:
         game.pressed[event.key] = True
         try:
             name = KEY_NAMES[event.key]
+            
         except KeyError:
             name = str(event.key)
-
+        game.timeSinceHeldBindingWasPressed[name.upper()] = 0
         viewBindings = {**game.dBindings.get(game.curr_view, {}), **game.dBindings['*']}
 
         for i in filter(lambda i: name in i.split('-'),viewBindings.keys()):
@@ -88,5 +89,15 @@ class BindingFeature:
                         all_keys_pressed = False
                         break
                 if all_keys_pressed:
-                    functions.append(viewBindings[comb.upper()])
+                    game.timeSinceHeldBindingWasPressed[comb.upper()] += 1
+                    
+                    if game.timeSinceHeldBindingWasPressed[comb.upper()] == 1:
+
+
+                        functions.append(viewBindings[comb.upper()])
+                    elif game.timeSinceHeldBindingWasPressed[comb.upper()] > game.TAP_HOLD_THRESHOLD:
+                        functions.append(viewBindings[comb.upper()])
+
+                else:
+                    game.timeSinceHeldBindingWasPressed[comb.upper()] = 0
         return functions
