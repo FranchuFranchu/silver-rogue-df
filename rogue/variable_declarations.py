@@ -6,8 +6,8 @@ class VariableDeclarations:
         
         self.TILE_W = 12 # Tile size, in pixels
         self.TILE_H = 12
-        self.CHAR_W = 18 # Screen size, in tiles
-        self.CHAR_H = 18    
+        self.CHAR_W = 92 # Screen size, in tiles
+        self.CHAR_H = 52    
 
         # Screen size, in pixels
         self.SCREEN_W = self.TILE_W * self.CHAR_W
@@ -99,3 +99,6 @@ class VariableDeclarations:
         elif system() == 'Linux':
             self.saveLocation = expandvars('$HOME/.local/share/FF-rogue')
         print("Save folder is", self.saveLocation)
+        self.announcements = ["This is an announcement"]
+        self.ANNOUNCEMENT_W = self.CHAR_W // 3
+        self.ANNOUNCEMENT_H = self.CHAR_H // 2

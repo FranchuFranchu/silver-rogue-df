@@ -12,7 +12,7 @@ import spritesheets
 import generate
 import nonblockingchinput
 # Import classes
-from game_classes import BaseMapTile, Map
+from game_classes import BaseMapTile, Map, BaseEntity
 from drawable_game_classes import MapTile, World, WorldTile
 # Import features
 from variable_declarations import VariableDeclarations
@@ -27,6 +27,22 @@ class GameObjectFeature:
         game.entities = game.worldtile.gen()
         game.player.y = game.entities.yproject(game.player.x, game.player.z)
         game.entities.add(game.player)
+
+class AnnouncementFeature:
+    def blit_announcements(game):
+
+        # Find out how much announcements fit in the box
+        free_lines = game.ANNOUNCEMENT_H
+        fitting_announcements = 0
+        for i in game.announcements[::-1]:
+            if free_lines < 1:
+                break
+            free_lines -= math.ceil(len(i) / game.ANNOUNCEMENT_W)
+            fitting_announcements += 1
+        # print them
+        for y, i in enumerate(game.announcements[-fitting_announcements:][::-1]):
+            game.blit_str_at(i, 0, game.CHAR_H - 1 - y)
+
 
 class PlayViewTickFeature:
     def playv_tick(game):
@@ -56,7 +72,7 @@ class PlayViewTickFeature:
 class LookingFeature:
     def lookv_tick(game):
         if not hasattr(game, 'cursor_e'):
-            game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z)
+            game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z, draw_index = 10)
 
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
         game.screen.fill((0,0,0))
@@ -88,6 +104,12 @@ class LookingFeature:
 
         elif game.direction == 11:
             game.cursor_e.y += 1
+    def talkWithPerson(game):
+        e = game.entities[game.cursor_e.pos]
+        if len(e.entities) == 0:
+            game.announcements.append("There is no one to talk with here")
+        else:
+            game.announcements.append(e.entities[0].desc + ": Hi")
 
 class GameToStringFeature:
     def game_to_string(game, where = '', depth = 1, tab = 1):
@@ -141,7 +163,8 @@ class MainGame(
     ViewSwitchFunctionsFeature,
     PlayViewTickFeature,
     LookingFeature,
-    GameToStringFeature
+    GameToStringFeature,
+    AnnouncementFeature
     ):
     def init(self):
         pygame.display.init()
@@ -181,6 +204,7 @@ class MainGame(
         self.hbind('look', 'left', self.move_cursor, 4)
         self.hbind('look', 'less',self.move_cursor, 10)
         self.hbind('look', 'greater', self.move_cursor, 11)
+        self.bind('look', 'k', self.talkWithPerson)
         self.tile_at_player = self.entities[0, self.entities.yproject(0,0), 0]
 
     def movePlayerAccordingToDirection(game, direction):
@@ -284,7 +308,6 @@ class MainGame(
             if console_kb.kbhit():
                 ch = console_kb.getch()
                 print(ch, end = '')
-                sys.stdout.flush()
                 if ch == '\n':
                     if game.currcmd == 'exit':
                         pygame.quit()
@@ -292,9 +315,15 @@ class MainGame(
                     gargs = game.currcmd.split(' ')
                     if gargs[0] == 'p':
                         print(game.game_to_string())
+                    elif game.currcmd == 'mkhuman':
+                        game.entities[game.cursor_e.pos].entities.append(BaseEntity('U', *game.cursor_e.pos, desc = 'A human'))
                     game.currcmd = ''
+                elif ord(ch) == 0x7F: # Backspace
+                    print('\b \b', end = '')
+                    game.currcmd = game.currcmd[:-1]
                 else:
                     game.currcmd += ch
+                sys.stdout.flush()
 
             for i in game.listHeldBindings():
                 i()
@@ -334,10 +363,10 @@ class MainGame(
                         i.print()
                     game.char_notation_blit('@', game.playerworldx, game.playerworldy)
                     pygame.display.update()
-            if game.tick:
-
+            if game.tick:   
                 game.char_notation_blit('FPS - ' + str(dt)[:5],0, 0)
                 game.char_notation_blit('Time taken - ' + str(tt)[:5],0, 1)
+                game.blit_announcements()
                 pygame.display.update()
             pygame.event.pump()
             etime = perf_counter()

@@ -51,11 +51,9 @@ class GraphicsFeature:
         elif len(k) == 3:
             return (k[2],k[0], k[1])
 
-    # Calls blit_char_at, but uses color notation
-    def char_notation_blit(game, col, tx, ty):
-        cfg = game.char_not_to_cfg(col)
-        tx = int(tx)
-        ty = int(ty)
+    # Can print multiple characters
+    def blit_str_at(game, s = ' ', tx = 0, ty = 0, fg = 'W', bg = '0'):
+        cfg = [s, fg, bg]
         if isinstance(cfg[0], int):
             game.blit_char_at(cfg[0], tx, ty, cfg[1], cfg[2])
         else:
@@ -65,3 +63,9 @@ class GraphicsFeature:
                 ):
                 game.blit_char_at(char, x, ty, cfg[1], cfg[2])
 
+    # Calls blit_char_at, but uses color notation
+    def char_notation_blit(game, col, tx, ty):
+        cfg = game.char_not_to_cfg(col)
+        tx = int(tx)
+        ty = int(ty)
+        game.blit_str_at(cfg[0], tx, ty, cfg[1], cfg[2])

@@ -2,12 +2,14 @@ from autoclass import autoclass
 import copy
 @autoclass
 class BaseMapTile:
-    def __init__(self, char = ' ', x = 0, y = 0, z = 0, passable = True, draw_index = 0, slope = 0, attrs = None):
+    def __init__(self, char = ' ', x = 0, y = 0, z = 0, passable = True, draw_index = 0, slope = 0, attrs = None, entities = None):
         if isinstance(char, BaseMapTile):
             e = char
             self.char , self.x , self.y , self.z , self.passable , self.draw_index , self.slope , self.attrs =  e.char , e.x , e.y , e.z , e.passable , e.draw_index , e.slope , e.attrs 
         if attrs == None:  
             self.attrs = set()
+        if entities == None:  
+            self.entities = list()
     @property
     def pos(self):
         return self.x, self.y, self.z
@@ -83,6 +85,6 @@ class Site:
 
 @autoclass
 class BaseEntity:
-    def __init__(self, char = ' ', x = 0, y = 0, z = 0, volume = 75, draw_index = 0, attrs = None):
+    def __init__(self, char = ' ', x = 0, y = 0, z = 0, volume = 75, draw_index = 0, attrs = None, desc = ''):
         pass
     
