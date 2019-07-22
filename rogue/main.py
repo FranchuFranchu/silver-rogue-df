@@ -3,6 +3,7 @@ import math
 from time import perf_counter
 from itertools import product
 from functools import partial
+from copy import deepcopy
 
 import pygame, sys
 from pygame.locals import *
@@ -16,10 +17,9 @@ from game_classes import BaseMapTile, Map, BaseEntity
 from drawable_game_classes import MapTile, World, WorldTile
 # Import features
 from variable_declarations import VariableDeclarations
-from graphics import GraphicsFeature
+from pygame_g import GraphicsFeature
 from bind_utils import BindingFeature
 from screen_resizing import ScreenResizingFeature
-from copy import deepcopy
 
 class GameObjectFeature:
     def regenerate_world_tile(game, playerx = 4, playerz = 4):
