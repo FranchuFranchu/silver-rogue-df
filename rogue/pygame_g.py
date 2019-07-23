@@ -4,7 +4,9 @@ import spritesheets
 
 # Gets the surface in the tileset for a specific character
 class GraphicsFeature:
-
+    def g_update(game):
+        pygame.display.update()
+        
     def graphics_init(game):
         game.sheet = spritesheets.spritesheet('../resource/tileset.png')
 

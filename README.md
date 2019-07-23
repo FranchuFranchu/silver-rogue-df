@@ -25,13 +25,11 @@ You are the tiny @ in the middle of the screen
 Use the arrow keys to move
 Use "rshift + arrow keys" to resize the window
 Use "l" to **L**ook
-When looking:
-- Use "k" to tal**K** 
+Use "k" to tal**K** 
 
 How to make a human with the command line:
-- Enter into look mode and move the cursor to the place where you want to make the human 
 - Type "mkhuman" in the command line
-- To talk with the human, move the cursor to the place where you put the human and press K
+- To talk with the human, enter looking mode and move the cursor to the place where you put the human and press K
 
 
 

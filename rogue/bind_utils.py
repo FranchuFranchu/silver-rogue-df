@@ -56,7 +56,6 @@ class BindingFeature:
             name = str(event.key)
         game.timeSinceHeldBindingWasPressed[name.upper()] = 0
         viewBindings = {**game.dBindings.get(game.curr_view, {}), **game.dBindings['*']}
-
         for i in filter(lambda i: name in i.split('-'),viewBindings.keys()):
             i = i.upper()
             comb = i

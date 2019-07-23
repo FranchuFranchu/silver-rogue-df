@@ -94,7 +94,6 @@ class Road:
 			
 
 	def gen(self, entities):
-		print(entities.d)
 		new_entities = Map()
 		posx = self.x
 		posz = self.y

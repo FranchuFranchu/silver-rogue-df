@@ -12,14 +12,26 @@ from autoclass import autoclass
 import spritesheets
 import generate
 import nonblockingchinput
+
 # Import classes
 from game_classes import BaseMapTile, Map, BaseEntity
-from drawable_game_classes import MapTile, World, WorldTile
+from drawable_game_classes import MapTile, World, WorldTile, Entity
+
 # Import features
 from variable_declarations import VariableDeclarations
 from pygame_g import GraphicsFeature
 from bind_utils import BindingFeature
 from screen_resizing import ScreenResizingFeature
+from graphics import SelectionList
+
+class DrawMapFeature:
+    def drawMap(game):
+        for i in game.entities:
+            
+            if game.player.y == i.y:
+                i.print() 
+            for e in i.entities:
+                e.print()
 
 class GameObjectFeature:
     def regenerate_world_tile(game, playerx = 4, playerz = 4):
@@ -61,10 +73,8 @@ class PlayViewTickFeature:
         
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
         game.screen.fill((0,0,0)) # TODO only redraw everything if the game.camera has moved
-        for i in game.entities:
-            
-            if game.player.y == i.y:
-                i.print() 
+
+        game.drawMap()
         game.char_notation_blit('@', game.camerax + game.player.x , game.player.z + game.cameraz)
             
         game.last_player_pos = game.tile_at_player.x, game.tile_at_player.y, game.tile_at_player.z
@@ -72,14 +82,11 @@ class PlayViewTickFeature:
 class LookingFeature:
     def lookv_tick(game):
         if not hasattr(game, 'cursor_e'):
-            game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z, draw_index = 10)
+            game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z, draw_index = 1000)
 
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
         game.screen.fill((0,0,0))
-        for i in game.entities:
-            
-            if game.cursor_e.y == i.y:
-                i.print() 
+        game.drawMap()
 
         game.cursor_e.print()
         
@@ -104,12 +111,17 @@ class LookingFeature:
 
         elif game.direction == 11:
             game.cursor_e.y += 1
+
+    def talkedWithPerson(game, what):
+        game.announcements.append("You: " + game.talking_list.items[what])
+        game.drawMap()
     def talkWithPerson(game):
         e = game.entities[game.cursor_e.pos]
+        game.drawMap()
         if len(e.entities) == 0:
             game.announcements.append("There is no one to talk with here")
         else:
-            game.announcements.append(e.entities[0].desc + ": Hi")
+            game.talking_list.display()
 
 class GameToStringFeature:
     def game_to_string(game, where = '', depth = 1, tab = 1):
@@ -144,9 +156,7 @@ class VideoResizeHandlerFeature:
         timeSinceVideoResize = 0
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
         game.update_mode()
-        for i in game.entities:
-            if game.player.y == i.y:
-                i.print() 
+        game.drawMap()
 
 class ViewSwitchFunctionsFeature:
     # Functions to switch between Views using lambdas
@@ -164,7 +174,8 @@ class MainGame(
     PlayViewTickFeature,
     LookingFeature,
     GameToStringFeature,
-    AnnouncementFeature
+    AnnouncementFeature,
+    DrawMapFeature
     ):
     def init(self):
         pygame.display.init()
@@ -180,7 +191,7 @@ class MainGame(
 
         self.world = World(wtiles,seed = 1)
         self.world[2,2].town = True
-        self.player = MapTile(self, '@', 0, 0, 0)
+        self.player = Entity(self, '@', 0, 0, 0)
         
         self.regenerate_world_tile()
         self.bind('*',  'rshift-up',   self.resizeScreen, 8)
@@ -206,7 +217,10 @@ class MainGame(
         self.hbind('look', 'greater', self.move_cursor, 11)
         self.bind('look', 'k', self.talkWithPerson)
         self.tile_at_player = self.entities[0, self.entities.yproject(0,0), 0]
-
+        # Player state variables
+        self.curr_view = 'play' # if the player is in a menu, etc.
+        
+        self.talking_list = SelectionList(self, "talking_list", items = ["Ask about someone", "Ask for directions", "Ask the listener to join you", "Say goodbye"], onselect = self.talkedWithPerson)
     def movePlayerAccordingToDirection(game, direction):
         game.direction = direction
         game.tile_at_player = game.entities[game.player.pos]
@@ -271,8 +285,6 @@ class MainGame(
         # Variables for the loop
         clock = pygame.time.Clock()
 
-        # Player state variables
-        game.curr_view = 'play' # if the player is in a menu, etc.
 
         game.tick = True
         # These two are to avoid having to redraw the screen every game.tick the game.screen is being resized
@@ -299,7 +311,6 @@ class MainGame(
         timeSinceKeyWasLastPressed = {}
         pygame.key.set_repeat(0)
 
-        game.curr_view = 'play'
         game.pressed = {}
         ################ MAIN LOOP ####################################
         while True:
@@ -316,7 +327,7 @@ class MainGame(
                     if gargs[0] == 'p':
                         print(game.game_to_string())
                     elif game.currcmd == 'mkhuman':
-                        game.entities[game.cursor_e.pos].entities.append(BaseEntity('U', *game.cursor_e.pos, desc = 'A human'))
+                        game.entities.add(Entity(game, 'U', *game.player.pos, desc = 'A human'))
                     game.currcmd = ''
                 elif ord(ch) == 0x7F: # Backspace
                     print('\b \b', end = '')
@@ -364,8 +375,8 @@ class MainGame(
                     game.char_notation_blit('@', game.playerworldx, game.playerworldy)
                     pygame.display.update()
             if game.tick:   
-                game.char_notation_blit('FPS - ' + str(dt)[:5],0, 0)
-                game.char_notation_blit('Time taken - ' + str(tt)[:5],0, 1)
+                #game.char_notation_blit('FPS - ' + str(dt)[:5],0, 0)
+                #game.char_notation_blit('Time taken - ' + str(tt)[:5],0, 1)
                 game.blit_announcements()
                 pygame.display.update()
             pygame.event.pump()

@@ -1,4 +1,4 @@
-from game_classes import BaseMapTile, Map
+from game_classes import BaseMapTile, Map, BaseEntity
 from autoclass import autoclass
 import random
 import generate
@@ -34,6 +34,22 @@ class MapTile(BaseMapTile):
         if self.draw_index < self.game.zindex_buf[self.x][self.z]:
             return
         self.game.zindex_buf[self.x][self.z] = self.draw_index
+        self.game.char_notation_blit(self.char, self.x + self.game.camerax, self.z + self.game.cameraz)
+
+class Entity(BaseEntity):
+    def __init__(self, game, *args, **kwargs):    
+        self.game = game
+        BaseEntity.__init__(self, *args, **kwargs)
+    def print(self):
+
+        #log(self.x,self.y,self.z)
+        if self.game.CHAR_H <= self.z + self.game.cameraz:
+            return
+        elif self.game.CHAR_W <= self.x + self.game.camerax:
+            return
+        if self.draw_index + 100 < self.game.zindex_buf[self.x][self.z]: # + 100 because entities will always be drawn after map tiles
+            return
+        self.game.zindex_buf[self.x][self.z] = self.draw_index + 100
         self.game.char_notation_blit(self.char, self.x + self.game.camerax, self.z + self.game.cameraz)
 
 @autoclass
@@ -116,7 +132,7 @@ class WorldTile:
         self.game.char_notation_blit(self.char, self.x, self.z)      
 
 
-class World(Map):
+class World():
     def __init__(self, entity_list, seed = 3):
         self.d = {}
         for i in entity_list:
