@@ -54,20 +54,27 @@ class GraphicsFeature:
             return (k[2],k[0], k[1])
 
     # Can print multiple characters
-    def blit_str_at(game, s = ' ', tx = 0, ty = 0, fg = 'W', bg = '0'):
+    def blit_str_at(game, s = ' ', tx = 0, ty = 0, fg = 'W', bg = '0', underline = False):
         cfg = [s, fg, bg]
         if isinstance(cfg[0], int):
             game.blit_char_at(cfg[0], tx, ty, cfg[1], cfg[2])
+            if underline: game.draw_underline(tx, ty)
         else:
             for x, char in zip( 
                 range(tx, tx + len(cfg[0])), 
                 cfg[0] 
                 ):
                 game.blit_char_at(char, x, ty, cfg[1], cfg[2])
-
+                if underline: game.draw_underline(x, ty)
     # Calls blit_char_at, but uses color notation
     def char_notation_blit(game, col, tx, ty):
         cfg = game.char_not_to_cfg(col)
         tx = int(tx)
         ty = int(ty)
         game.blit_str_at(cfg[0], tx, ty, cfg[1], cfg[2])
+
+    def draw_underline(game, tx, ty, col = 'W'):
+        surf = pygame.Surface((game.TILE_W, game.TILE_H), pygame.SRCALPHA, 32).convert_alpha()
+        rect = pygame.Rect(tx * game.TILE_W, ty * game.TILE_H, game.TILE_W, game.TILE_H)
+        pygame.draw.line(surf, game.COLOR_MAP[col], (0, game.TILE_H - 1), (game.TILE_W - 1, game.TILE_H - 1))
+        game.screen.blit(surf, rect)
