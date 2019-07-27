@@ -2,7 +2,7 @@ from random import choice, randint
 import random
 
 from noise import snoise2
-from game_classes import BaseMapTile, Map, Site
+from game_classes import BaseMapTile, Map, Site, BaseEntity
 
 class Town(Site):
 	roads: list
@@ -12,8 +12,7 @@ class Town(Site):
 		new_entities = Map()
 		for road in self.roads:
 			new_entities += road.gen(entities)
-		for k, v in new_entities.d.items():
-			v.attrs.add('town')
+		print(new_entities)
 		return new_entities
 
 class Road:
@@ -196,7 +195,9 @@ class House:
 			new_entities.add(BaseMapTile(0xB3, x, y, i, draw_index = 2, passable = False))
 			new_entities.add(BaseMapTile(0xB3, x + w, y, i, draw_index = 2, passable = False))
 
-			# Corners
+		# Person
+		new_entities.add(BaseEntity('U', x + w // 2, y, z + h // 2, draw_index = 1000))
+		# Corners
 		new_entities.add(BaseMapTile(0xBF, x + w, y,  z, draw_index = 2, passable = False))
 		new_entities.add(BaseMapTile(0xC0, x, y, z + h, draw_index = 2, passable = False))
 		new_entities.add(BaseMapTile(0xDA, x, y,  z, draw_index = 2, passable = False))

@@ -41,7 +41,7 @@ class Map:
     def add(self, *entities):
         for e in entities:
             if isinstance(e, BaseEntity):
-
+                print(e.x, e.y, e.z)
                 self.mapTiles[e.x, e.y, e.z].entities.append(e)
             elif isinstance(e, BaseMapTile):
                 self.mapTiles[e.x, e.y, e.z] = e

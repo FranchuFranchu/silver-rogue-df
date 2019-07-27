@@ -39,10 +39,14 @@ class MapTile(BaseMapTile):
 class Entity(BaseEntity):
     def __init__(self, game, *args, **kwargs):    
         self.game = game
+        if len(args) == 1 and kwargs == {}:
+            if type(args[0]) == BaseMapTile:
+                e = args[0]
+                self.char , self.x , self.y , self.z , self.draw_index ,  self.attrs =  e.char , e.x , e.y , e.z , e.draw_index , e.attrs 
+                print('aa')
+                return
         BaseEntity.__init__(self, *args, **kwargs)
     def print(self):
-
-        #log(self.x,self.y,self.z)
         if self.game.CHAR_H <= self.z + self.game.cameraz:
             return
         elif self.game.CHAR_W <= self.x + self.game.camerax:
@@ -81,7 +85,10 @@ class WorldTile:
             self.site = generate.town.Town()
             t_gened = self.site.gen(new_entities)
             for i in t_gened:
-                new_entities.add(MapTile(self.game, i))
+                if isinstance(i, BaseEntity):
+                    new_entities.add(Entity(self.game, i))
+                elif isinstance(i, BaseMapTile):
+                    new_entities.add(MapTile(self.game, i))
 
         # Generate slopes in the terrain "cliffs"
         for i in filter(lambda x: 'terrain' in x.attrs, new_entities.d.values()):

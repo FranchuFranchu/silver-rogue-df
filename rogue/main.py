@@ -82,18 +82,18 @@ class PlayViewTickFeature:
 class LookingFeature:
     def lookv_tick(game):
         if not hasattr(game, 'cursor_e'):
+            print('look!')
             game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z, draw_index = 1000)
 
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
         game.screen.fill((0,0,0))
         game.drawMap()
-
+        
         game.cursor_e.print()
         
     def move_cursor(game, direction):
         game.direction = direction
         game.tick = True
-        game.focus_camera(game.cursor_e)
 
         if game.direction == 2:
             game.cursor_e.z += 1
@@ -111,6 +111,7 @@ class LookingFeature:
 
         elif game.direction == 11:
             game.cursor_e.y += 1
+        game.focus_camera(game.cursor_e)
 
     def talkedWithPerson(game, what):
         game.announcements.append("You: " + game.talking_list.items[what])
@@ -162,7 +163,7 @@ class ViewSwitchFunctionsFeature:
     # Functions to switch between Views using lambdas
     def setView(game, view):
         game.curr_view = view
-        print('!', game.curr_view)
+        game.tick_according_to_current_view()
 
 class MainGame(
     VariableDeclarations,
@@ -221,6 +222,12 @@ class MainGame(
         self.curr_view = 'play' # if the player is in a menu, etc.
         
         self.talking_list = SelectionList(self, "talking_list", items = ["Ask about someone", "Ask for directions", "Ask the listener to join you", "Say goodbye"], onselect = self.talkedWithPerson)
+
+    def tick_according_to_current_view(game):
+        if game.curr_view == 'play':
+            game.playv_tick()
+        elif game.curr_view == 'look':
+            game.lookv_tick()
     def movePlayerAccordingToDirection(game, direction):
         game.direction = direction
         game.tile_at_player = game.entities[game.player.pos]
@@ -364,16 +371,17 @@ class MainGame(
                 game.tick = True
                 videoResizeWasHappening = False
             game.tickc += 1
-            if game.curr_view == 'play': # Local view
-                game.playv_tick()
-            elif game.curr_view == 'look':
-                game.lookv_tick()
-            elif game.curr_view == 'map':
-                if game.tick:
-                    for i in world:
-                        i.print()
-                    game.char_notation_blit('@', game.playerworldx, game.playerworldy)
-                    pygame.display.update()
+            if game.tick:
+                if game.curr_view == 'play': # Local view
+                    game.playv_tick()
+                elif game.curr_view == 'look':
+                    game.lookv_tick()
+                elif game.curr_view == 'map':
+                    if game.tick:
+                        for i in world:
+                            i.print()
+                        game.char_notation_blit('@', game.playerworldx, game.playerworldy)
+                        pygame.display.update()
             if game.tick:   
                 #game.char_notation_blit('FPS - ' + str(dt)[:5],0, 0)
                 #game.char_notation_blit('Time taken - ' + str(tt)[:5],0, 1)
