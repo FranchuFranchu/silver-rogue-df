@@ -15,14 +15,32 @@ def Grass(game, x,y,z):
     e.attrs.add('terrain')
     return e
 
+
+def convert_to_graphics_classes(game, self: Map):
+    # Converts all BaseMapTiles -> MapTiles
+    # And BaseEntities -> Entities
+
+    for k, m in self.mapTiles.items():
+        if not isinstance(m, BaseMapTile):
+            # Something horrible happened
+            del self.mapTiles[k]
+            continue
+        for idx, j in enumerate(m.entities):
+            if type(j) == BaseEntity:
+                m.entities[idx] = Entity(game, j)
+        if type(m) == BaseMapTile:
+            m = MapTile(game, m)
+        self.mapTiles[k] = m
+    pass
 class MapTile(BaseMapTile):
     def __init__(self, game, *args, **kwargs):
+        self.game = game
         if len(args) == 1 and kwargs == {}:
             if type(args[0]) == BaseMapTile:
                 e = args[0]
-                self.char , self.x , self.y , self.z , self.passable , self.draw_index , self.slope , self.attrs =  e.char , e.x , e.y , e.z , e.passable , e.draw_index , e.slope , e.attrs 
+                self.char , self.x , self.y , self.z , self.passable , self.draw_index , self.slope , self.attrs, self.entities =  e.char , e.x , e.y , e.z , e.passable , e.draw_index , e.slope , e.attrs, e.entities
+                return
                 
-        self.game = game
         BaseMapTile.__init__(self, *args, **kwargs)
 
     def print(self):
@@ -40,10 +58,9 @@ class Entity(BaseEntity):
     def __init__(self, game, *args, **kwargs):    
         self.game = game
         if len(args) == 1 and kwargs == {}:
-            if type(args[0]) == BaseMapTile:
+            if type(args[0]) == BaseEntity:
                 e = args[0]
-                self.char , self.x , self.y , self.z , self.draw_index ,  self.attrs =  e.char , e.x , e.y , e.z , e.draw_index , e.attrs 
-                print('aa')
+                self.char , self.x , self.y , self.z , self.draw_index , self.volume, self.desc, self.attrs, =  e.char , e.x , e.y , e.z , e.draw_index , e.volume, e.desc, e.attrs 
                 return
         BaseEntity.__init__(self, *args, **kwargs)
     def print(self):
@@ -60,7 +77,7 @@ class Entity(BaseEntity):
 class WorldTile:
 
     def __init__(self, game, char = ' ', x = 0, z = 0, worldseed = random.random() * 10 ** 6, passable = False, draw_index = 1, flatness = 0.4, town = False):
-        pass
+        self.game = game
 
     def gen(self):
         # Generate the local map
@@ -84,11 +101,8 @@ class WorldTile:
         if self.town:
             self.site = generate.town.Town()
             t_gened = self.site.gen(new_entities)
-            for i in t_gened:
-                if isinstance(i, BaseEntity):
-                    new_entities.add(Entity(self.game, i))
-                elif isinstance(i, BaseMapTile):
-                    new_entities.add(MapTile(self.game, i))
+            convert_to_graphics_classes(self.game, t_gened) 
+            new_entities += t_gened
 
         # Generate slopes in the terrain "cliffs"
         for i in filter(lambda x: 'terrain' in x.attrs, new_entities.d.values()):
@@ -123,6 +137,7 @@ class WorldTile:
                             new_entities[e.x, i.y - 1, e.z].char = "G: 1F"
                         else:
                             pass
+
         self.game.entities = new_entities
         return new_entities
 

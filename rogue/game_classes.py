@@ -41,15 +41,10 @@ class Map:
     def add(self, *entities):
         for e in entities:
             if isinstance(e, BaseEntity):
-                print(e.x, e.y, e.z)
                 self.mapTiles[e.x, e.y, e.z].entities.append(e)
             elif isinstance(e, BaseMapTile):
                 self.mapTiles[e.x, e.y, e.z] = e
-    def dirty_copy(self):
-        # I hope this works
-        self.mapTiles['Some key'] = 1
-        k = {}.update(self.mapTiles)
-        return k
+
     def remove(self, *entities):
         for e in entities:
             del self.mapTiles[e.x, e.y, e.z]
@@ -57,7 +52,6 @@ class Map:
     def yproject(self, x, z): # Finds a safe place to place a game.player, house, etc.
         for i in sorted(list(filter(lambda e: e.x == x and e.z == z, self)),key = lambda a: -a.y) :
             return i.y
-
     def __contains__(self, *items):
         for i in items:
             if isinstance(i, tuple):
@@ -80,7 +74,9 @@ class Map:
         return self.i.__next__()
 
     def __add__(self, other):
-        return Map({**self.mapTiles, **other.d})
+        new_self_map_tiles = self.mapTiles.copy()
+        f = {**new_self_map_tiles, **other.mapTiles}
+        return Map(f)
 
 class HistoricalEntity:
     # Saves entities when they aren't loaded
@@ -92,7 +88,7 @@ class Site:
 @autoclass
 class BaseEntity:
     def __init__(self, char = ' ', x = 0, y = 0, z = 0, volume = 75, draw_index = 0, attrs = None, desc = ''):
-        pass
+        self.char , self.x , self.y , self.z , self.draw_index , self.volume, self.desc, self.attrs =  char , x , y , z , draw_index , volume, desc, attrs 
     @property
     def pos(self):
         return self.x, self.y, self.z

@@ -4,6 +4,7 @@ from time import perf_counter
 from itertools import product
 from functools import partial
 from copy import deepcopy
+from pprint import pformat
 
 import pygame, sys
 from pygame.locals import *
@@ -27,11 +28,10 @@ from graphics import SelectionList
 class DrawMapFeature:
     def drawMap(game):
         for i in game.entities:
-            
             if game.player.y == i.y:
                 i.print() 
-            for e in i.entities:
-                e.print()
+                for e in i.entities:
+                    e.print()
 
 class GameObjectFeature:
     def regenerate_world_tile(game, playerx = 4, playerz = 4):
@@ -82,15 +82,14 @@ class PlayViewTickFeature:
 class LookingFeature:
     def lookv_tick(game):
         if not hasattr(game, 'cursor_e'):
-            print('look!')
             game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z, draw_index = 1000)
 
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
         game.screen.fill((0,0,0))
         game.drawMap()
-        
+
         game.cursor_e.print()
-        
+        game.blit_str_at(', '.join([str(i) for i in game.cursor_e.pos]), 0, 0)
     def move_cursor(game, direction):
         game.direction = direction
         game.tick = True
@@ -112,9 +111,12 @@ class LookingFeature:
         elif game.direction == 11:
             game.cursor_e.y += 1
         game.focus_camera(game.cursor_e)
+        
 
     def talkedWithPerson(game, what):
         game.announcements.append("You: " + game.talking_list.items[what])
+        game.announcements.append(game.entities[game.cursor_e.pos].entities[0].desc + ': Hi')
+        game.setView('play')
         game.drawMap()
     def talkWithPerson(game):
         e = game.entities[game.cursor_e.pos]
@@ -394,7 +396,20 @@ class MainGame(
             game.tick = False
             clock.tick(dt)
 
+    # For pickling and deep-copying
+    def __getstate__(self):
+        # Pickle everything, except the screen and sheet
+        d = self.__dict__
+        del d['screen']
+        del d['sheet']
+        return d
 
+    def __setstate__(self, state):
+        pygame.display.init()
+        self.__dict__ = state
+        self.update_mode()
+        self.graphics_init()
+        return self.__dict__
 if __name__ == '__main__':
     theMainGame = MainGame()
     theMainGame.init()
