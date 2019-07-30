@@ -1,0 +1,16 @@
+talk:
+  opts:
+    greet: "Greet the listener"
+    ask_person: "Ask about somebody"
+    ask_directions: "Ask for directions"
+    ask_place: "Ask about somewhere"
+    trade: "Trade, gift, or demand items"
+    goodbye: "Say goodbye"
+    ignore: "Ignore"
+    bypass: "Bypass greeting"
+
+  values:
+    greeting1: "Hello {listener}"
+    greeting2: "Hello {listener}, I am {speaker}"
+    goodbye: "Goodbye"
+    namegoodbye: "Goodbye, {listener}"

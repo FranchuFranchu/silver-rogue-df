@@ -6,7 +6,7 @@ class Widget:
         self.game = game
 
 class SelectionList(Widget):
-    def __init__(self, game, name, x = 0, y = 0, w = 0, h = 0, items = [], onselect = lambda i: i, color_scheme = 'W'):
+    def __init__(self, game, name, x = 0, y = 0, w = 0, h = 0, items = [], metadata = [], onselect = lambda i: i, color_scheme = 'W'):
         super().__init__(game)
         self.name = name
         self.x = x
@@ -17,6 +17,7 @@ class SelectionList(Widget):
         self.onselect = onselect
         self.items = items
         self.currselected = 0
+        self.metadata = metadata
         self.pre_screen = game.screen.copy() # Lower layer of the screen
         game.bind('W_%s' % name, 'PLUS', self.moveSelectionFoward)
         game.bind('W_%s' % name, 'MINUS', self.moveSelectionBackward)
@@ -47,8 +48,12 @@ class SelectionList(Widget):
     
     def enterKey(self):
         self.game.setView(self.b_view)
-        self.onselect(self.currselected)
-
+        try: 
+            metadata = self.metadata[self.currselected]
+        except IndexError:
+            metadata = None
+        self.onselect(self.currselected, metadata)
+        self.game.g_update()
     # For pickling and deep-copying
     def __getstate__(self):
         d = self.__dict__

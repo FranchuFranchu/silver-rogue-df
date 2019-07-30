@@ -93,6 +93,8 @@ class VariableDeclarations:
 
         }
         self.TAP_HOLD_THRESHOLD = 5 # Time needed for a key to be pressed until it is considered a "held" key
+
+
         if system() == 'Windows':
             self.saveLocation = expandvars('%LOCALAPPDATA%\\FF\\rogue\\')
         elif system() == 'Darwin': # Mac
@@ -100,6 +102,10 @@ class VariableDeclarations:
         elif system() == 'Linux':
             self.saveLocation = expandvars('$HOME/.local/share/FF-rogue')
         print("Save folder is", self.saveLocation)
+
+
         self.announcements = ["This is an announcement"]
         self.ANNOUNCEMENT_W = self.CHAR_W // 3
         self.ANNOUNCEMENT_H = self.CHAR_H // 2
+
+        self.LANG = 'en'

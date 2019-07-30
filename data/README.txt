@@ -1,0 +1,1 @@
+Game definitions such as creatures, technologies are stored here

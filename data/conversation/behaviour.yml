@@ -1,0 +1,33 @@
+greet:
+  greet:
+    self: main 
+    option: talk.opts.greet
+    messages_self: 
+      - talk.values.greeting1
+      - talk.values.greeting2
+  bypass:
+    self: main
+    option: talk.opts.bypass
+  ignore:
+    self: exit
+    option: talk.opts.ignore
+
+main:
+  ask place:
+    option: talk.opts.ask_place
+  ask person:
+    option: talk.opts.ask_person
+  trade:
+    messages_self:
+      - talk.values.trade_self
+    messages_other:
+      - talk.values.trade_other
+    option: talk.opts.trade
+  goodbye:
+    option: talk.opts.goodbye
+    messages_self: 
+      - talk.values.goodbye
+      - talk.values.namegoodbye
+    messages_other: 
+      - talk.values.goodbye
+      - talk.values.namegoodbye

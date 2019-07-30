@@ -9,7 +9,7 @@ from pprint import pformat
 import pygame, sys
 from pygame.locals import *
 from autoclass import autoclass
-
+import yaml
 import spritesheets
 import generate
 import nonblockingchinput
@@ -24,6 +24,11 @@ from pygame_g import GraphicsFeature
 from bind_utils import BindingFeature
 from screen_resizing import ScreenResizingFeature
 from graphics import SelectionList
+from translations import TranslationFeature
+
+# Import views
+from views.play import PlayViewTickFeature
+from views.look import LookingFeature
 
 class DrawMapFeature:
     def drawMap(game):
@@ -55,76 +60,6 @@ class AnnouncementFeature:
         for y, i in enumerate(game.announcements[-fitting_announcements:][::-1]):
             game.blit_str_at(i, 0, game.CHAR_H - 1 - y)
 
-
-class PlayViewTickFeature:
-    def playv_tick(game):
-        if game.tile_at_player == None:
-            # skip graphics game.tick
-           return
-
-        if type(game.tile_at_player) == tuple:
-            if game.tile_at_player[1] == 'a':
-                # The player has encountered a cliff
-                game.tile_at_player = game.tile_at_player[0]
-                game.focus_camera(game.player)
-
-        # Move camera
-        game.focus_camera(game.player)
-        
-        game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
-        game.screen.fill((0,0,0)) # TODO only redraw everything if the game.camera has moved
-
-        game.drawMap()
-        game.char_notation_blit('@', game.camerax + game.player.x , game.player.z + game.cameraz)
-            
-        game.last_player_pos = game.tile_at_player.x, game.tile_at_player.y, game.tile_at_player.z
-
-class LookingFeature:
-    def lookv_tick(game):
-        if not hasattr(game, 'cursor_e'):
-            game.cursor_e = MapTile(game, 'X', game.player.x, game.player.y, game.player.z, draw_index = 1000)
-
-        game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
-        game.screen.fill((0,0,0))
-        game.drawMap()
-
-        game.cursor_e.print()
-        game.blit_str_at(', '.join([str(i) for i in game.cursor_e.pos]), 0, 0)
-    def move_cursor(game, direction):
-        game.direction = direction
-        game.tick = True
-
-        if game.direction == 2:
-            game.cursor_e.z += 1
-        if game.direction == 4:
-            game.cursor_e.x -= 1
-            
-        if game.direction == 6:
-            game.cursor_e.x += 1
-            
-        if game.direction == 8:
-            game.cursor_e.z -= 1
-
-        if game.direction == 10:
-            game.cursor_e.y -= 1
-
-        elif game.direction == 11:
-            game.cursor_e.y += 1
-        game.focus_camera(game.cursor_e)
-        
-
-    def talkedWithPerson(game, what):
-        game.announcements.append("You: " + game.talking_list.items[what])
-        game.announcements.append(game.entities[game.cursor_e.pos].entities[0].desc + ': Hi')
-        game.setView('play')
-        game.drawMap()
-    def talkWithPerson(game):
-        e = game.entities[game.cursor_e.pos]
-        game.drawMap()
-        if len(e.entities) == 0:
-            game.announcements.append("There is no one to talk with here")
-        else:
-            game.talking_list.display()
 
 class GameToStringFeature:
     def game_to_string(game, where = '', depth = 1, tab = 1):
@@ -178,13 +113,16 @@ class MainGame(
     LookingFeature,
     GameToStringFeature,
     AnnouncementFeature,
-    DrawMapFeature
+    DrawMapFeature,
+    TranslationFeature
     ):
     def init(self):
         pygame.display.init()
         self.init_vars()
         self.update_mode()
         self.graphics_init()
+        self.load_locales(self.LANG)
+        self.load_talking_behaviour()
         # Create world tile and game.entities
 
         wtiles = []
@@ -195,7 +133,7 @@ class MainGame(
         self.world = World(wtiles,seed = 1)
         self.world[2,2].town = True
         self.player = Entity(self, '@', 0, 0, 0)
-        
+
         self.regenerate_world_tile()
         self.bind('*',  'rshift-up',   self.resizeScreen, 8)
         self.bind('*',  'rshift-down', self.resizeScreen, 2)
@@ -223,7 +161,7 @@ class MainGame(
         # Player state variables
         self.curr_view = 'play' # if the player is in a menu, etc.
         
-        self.talking_list = SelectionList(self, "talking_list", items = ["Ask about someone", "Ask for directions", "Ask the listener to join you", "Say goodbye"], onselect = self.talkedWithPerson)
+        
 
     def tick_according_to_current_view(game):
         if game.curr_view == 'play':

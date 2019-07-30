@@ -2,4 +2,5 @@ autoclass
 pygame
 noise
 dict
+PyYAML # yaml
 # The trailing newline is needed for the bash script
