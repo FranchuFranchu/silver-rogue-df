@@ -3,6 +3,7 @@ command -v python3 -c "" >/dev/null 2>&1 || {
  exit 1;
 }
 all_modules_installed=1
+installed_mods=`pip3 freeze | sed --expression='s/\(.*\)==\(.*\)/\1/'`
 while IFS= read -r line; do
 	echo "Checking if $line is installed"
 	python3 -c "import $line" > /dev/null 2>&1
@@ -12,7 +13,7 @@ while IFS= read -r line; do
 		all_modules_installed=0
 		break
 	fi
-done < "./requirements.txt"
+done < <($installed_mods)
 if [ $all_modules_installed -eq 1 ]  
 then
 	cd rogue
