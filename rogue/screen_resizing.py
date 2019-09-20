@@ -17,7 +17,7 @@ class ScreenResizingFeature:
             game.CHAR_W -= resize_amount
         elif direction == 6:
             game.CHAR_W += resize_amount
-        game.SCREEN_H = game.TILE_H * game.CHAR_H
-        game.SCREEN_W = game.TILE_W * game.CHAR_W
+        game.SCREEN_H = game.TILE_W * game.CHAR_H
+        game.SCREEN_W = game.TILE_H * game.CHAR_W
         direction = 0
         game.update_mode()

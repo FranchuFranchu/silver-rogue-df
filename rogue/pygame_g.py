@@ -8,7 +8,8 @@ class GraphicsFeature:
         pygame.display.update()
         
     def graphics_init(game):
-        game.sheet = spritesheets.spritesheet('../resource/tileset.png')
+        pygame.display.init()
+        game.sheet = spritesheets.spritesheet('../resource/fonts/%s.png' % game.TILESET_NAME)
 
     def focus_camera(game, e):
         game.camerax = game.CHAR_W // 2 - e.x
@@ -24,9 +25,10 @@ class GraphicsFeature:
             pos = ord(pos)
         fgcol = game.COLOR_MAP[fgcol]
         bgcol = game.COLOR_MAP[bgcol]
-        upper = (pos & 0xF0) / 16 # Upper bits determine row
+        upper = (pos & 0xF0) >> 4 # Upper bits determine row
         lower = pos & 0x0F # Lower bits determine column
-        surf = game.sheet.image_at(((game.TILE_H * lower), (game.TILE_W * upper), game.TILE_W, game.TILE_H))
+        surf = game.sheet.image_at(((game.TILE_H * lower), (game.TILE_W * upper), game.TILE_H, game.TILE_W))
+        
         arr = pygame.PixelArray(surf)
         arr.replace((255,0,255), bgcol)
         arr.replace((255,255,255), fgcol)
@@ -35,7 +37,7 @@ class GraphicsFeature:
 
     # Prints a character at a tile
     def blit_char_at(game, char, tx, ty, fgcol = 'W', bgcol = '0'):
-        rect = pygame.Rect(tx * game.TILE_W, ty * game.TILE_H, game.TILE_W, game.TILE_H)
+        rect = pygame.Rect(tx * game.TILE_H, ty * game.TILE_W, game.TILE_W, game.TILE_H)
         game.screen.blit(game.get_surf(char,fgcol,bgcol), rect)
 
     # Converts color notation to a (char, fg, bg) tuple

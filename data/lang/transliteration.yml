@@ -1,0 +1,93 @@
+# How to translate IPA phonemes to numbers
+plosive:
+  - p
+  - b
+  - 
+  - 
+  - t
+  - d
+  - t
+  - d
+  - t
+  - d
+  - ʈ
+  - ɖ
+  - c
+  - ɟ
+  - k
+  - g
+  - q
+  - ɢ
+  - 
+  - Illegal
+  - ʔ
+  - Illegal
+nasal:
+  -
+  - m
+  -
+  - ɱ
+  - 
+  - n
+  - 
+  - n
+  - 
+  - n
+  - 
+  - ɳ
+  - 
+  - ɲ
+  - 
+  - ŋ
+  - 
+  - ɴ
+
+fricative:
+  - ɸ
+  - β
+  - f
+  - v
+  - θ
+  - ð
+  - s
+  - z
+  - ʃ
+  - ʒ
+  - ʂ
+  - ʐ
+  - ç
+  - ʝ
+  - x
+  - ɣ
+  - χ
+  - ʁ
+  - ħ
+  - ʕ
+  - h
+  - ɦ
+
+trill:
+taporflap:
+
+vowel:
+  open:
+    - a
+    - ɶ
+    - 
+    - 
+    - ɑ
+    - ɒ
+  closemid:
+    - e
+    - ø
+    - ɘ
+    - ɵ
+    - ɤ
+    - o
+  close:
+    - i
+    - y
+    - ɨ 
+    - ʉ
+    - ɯ 
+    - u

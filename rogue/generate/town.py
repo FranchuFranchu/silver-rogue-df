@@ -4,16 +4,37 @@ import random
 from noise import snoise2
 from game_classes import BaseMapTile, Map, Site, BaseEntity
 
+def get_all_ndirections(direction):
+	# Gets all possible (not diagonal) directions not equal to (direction)
+	k = [2, 4, 6, 8]
+	k.remove(direction)
+	return k
+
 class Town(Site):
 	roads: list
 	def __init__(self, entities = Map()):
 		self.roads = [Road(entities)]
 	def gen(self, entities = Map()):
+		self.grow(entities)
 		new_entities = Map()
 		for road in self.roads:
 			new_entities += road.gen(entities)
 		return new_entities
 
+	def grow(self, entities):
+		pos = []
+		for i in self.roads:
+			if (i.x, i.y, i.bdirection) in pos:
+				pos.remove((i.x, i.y, i.bdirection))
+			elif (i.ex, i.ey, i.edirection) in pos:
+				pos.remove((i.ex, i.ey, i.edirection))
+			else:
+				for d in get_all_ndirections(i.edirection):
+					pos.append((i.ex, i.ey, d))
+				for d in get_all_ndirections(i.bdirection):
+					pos.append((i.x, i.y, d))
+		where_to_grow = random.choice(pos)
+		self.roads.append(Road.from_direction(entities, *where_to_grow))
 class Road:
 	x: int
 	y: int
@@ -24,7 +45,7 @@ class Road:
 	# Horizontal?
 	h: bool 
 	houses: list
-	def __init__(self, entities):
+	def __init__(self, entities, x = 10, y = 10, w = 3, l = 20, h = True):
 		self.houses = []
 
 		HOUSE_SIZE_AVG = 40 
@@ -36,11 +57,12 @@ class Road:
 
 		HOUSE_SPACING = 3 # Spacing between house and house
 		HOUSE_STREET_SPACING = 2 # Spacing between house and street (like a "frontyard")
-		self.x = 10
-		self.y = 10
-		self.w = 3
-		self.l = 20
-		self.h = True
+
+		self.x = x
+		self.y = y
+		self.w = w
+		self.l = l
+		self.h = h
 
 		new_entities = Map()
 		posx = self.x
@@ -89,7 +111,7 @@ class Road:
 				 posz + occupied_tiles - 5,
 				 house_size_perpendicular,
 				 house_size_parallel, door_direction = 4))
-			
+	
 
 	def gen(self, entities):
 		new_entities = Map()
@@ -105,7 +127,7 @@ class Road:
 
 		for x in range(road_tiles[0],road_tiles[2]):
 			for z in range(road_tiles[1],road_tiles[3]):
-				new_entities.add(BaseMapTile('+', x, entities.yproject(x, z), z))
+				new_entities.add(BaseMapTile('+', x, entities.yproject(x, z), z, attrs = {'road'}))
 
 		# We'll have, on average, 6 tile wide houses
 		# The size will have gaussian distibution (google it)
@@ -129,7 +151,48 @@ class Road:
 		for i in self.houses:
 			new_entities += i.gen(entities)
 		return new_entities
+	@property
+	def horizontal(self):
+		# Alias
+		return self.h
+	
+	@property
+	def ex(self):
+		# End X
+		r = self.x + self.l if self.horizontal else self.x
+		return r
+	
+	@property
+	def ey(self):
+		# End Y
+		r = self.y if self.horizontal else self.y + self.l
+		return r
+	
+	@property
+	def edirection(self):
+		# Direction the road goes at the end
+		return 4 if self.horizontal else 8
+	@property
+	def bdirection(self):
+		# Direction the road goes at the beginning
+		return 6 if self.horizontal else 2
 
+	@staticmethod
+	def from_direction(entities, sx, sy, direction, w = 3, l = 20):
+		if direction == 2:
+			l *= -1
+			h = False
+		elif direction == 4:
+			l *= -1
+			h = True
+		elif direction == 6:
+			l *= 1
+			h = True
+		elif direction == 8:
+			l *= 1
+			h = False
+
+		return Road(entities, sx, sy, w, l, h)
 class House:
 	people: list # inhabitants of the house
 	x: int

@@ -76,7 +76,7 @@ class Entity(BaseEntity):
 @autoclass
 class WorldTile:
 
-    def __init__(self, game, char = ' ', x = 0, z = 0, worldseed = random.random() * 10 ** 6, passable = False, draw_index = 1, flatness = 0.4, town = False):
+    def __init__(self, game, char = ' ', x = 0, z = 0, worldseed = random.random() * 10 ** 6, passable = False, draw_index = 1, flatness = 0.4, site = None):
         self.game = game
 
     def gen(self):
@@ -98,40 +98,39 @@ class WorldTile:
         new_entities = Map(new_entities)
 
         # Add the town contents
-        if self.town:
-            self.site = generate.town.Town()
+        if self.site:
             t_gened = self.site.gen(new_entities)
             convert_to_graphics_classes(self.game, t_gened) 
             new_entities += t_gened
 
         # Generate slopes in the terrain "cliffs"
-        for i in filter(lambda x: 'terrain' in x.attrs, new_entities.d.values()):
+        for i in filter(lambda x: {'terrain', 'road'} & x.attrs, new_entities.d.values()):
             # Search for adjacent tiles in the higher layer
             for e in (new_entities[i.x + 1, i.y + 1, i.z], 
                       new_entities[i.x + 1, i.y + 1, i.z + 1],
                       new_entities[i.x - 1, i.y + 1, i.z],
                       new_entities[i.x, i.y + 1, i.z - 1]):
                 if e != None: # there is nothing on the tile
-                    if 'terrain' in e.attrs: # make sure the tile is not the new_player or smth
+                    if {'terrain', 'road'} & e.attrs: # make sure the tile is not the new_player or smth
 
 
                         new_entities[i.x, i.y, i.z].char = "G: 1F" # Up arrow
                         new_entities[i.x, i.y, i.z].slope = 1
 
                         if new_entities[e.x, i.y + 1, e.z]:
-                            if 'terrain' in new_entities[e.x, i.y + 1, e.z].attrs:
+                            if {'terrain', 'road'} & new_entities[e.x, i.y + 1, e.z].attrs:
                                 continue
                             new_entities[e.x, i.y + 1, e.z].slope = -1
                             new_entities[e.x, i.y + 1, e.z].char = "G: 1E"
             # do the same but for lower layers
             for e in (new_entities[i.x + 1, i.y - 1, i.z],new_entities[i.x + 1, i.y - 1, i.z + 1],new_entities[i.x - 1, i.y - 1, i.z],new_entities[i.x, i.y - 1, i.z - 1]):
                 if e != None: 
-                    if 'terrain' in e.attrs:
+                    if {'terrain', 'road'} & e.attrs:
 
                         new_entities[i.x, i.y, i.z].char = "G: 1E" # Up arrow
                         new_entities[i.x, i.y, i.z].slope = -1
                         if new_entities[e.x, i.y - 1, e.z]:
-                            if 'terrain' in new_entities[e.x, i.y - 1, e.z].attrs:
+                            if {'terrain', 'road'} & new_entities[e.x, i.y - 1, e.z].attrs:
                                 continue
                             new_entities[e.x, i.y - 1, e.z].slope = 1
                             new_entities[e.x, i.y - 1, e.z].char = "G: 1F"

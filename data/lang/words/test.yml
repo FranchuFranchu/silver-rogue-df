@@ -1,0 +1,24 @@
+cat:
+  type: noun
+  related:
+    - animal
+    - fur
+  simple: 3
+
+blue:
+  type: premod
+  related:
+    - water
+  simple: 1
+
+the:
+  type: premod
+  simple: 0
+
+open:
+  type: verb
+  simple: 1
+
+door:
+  type: noun
+  simple: 1

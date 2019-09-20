@@ -3,4 +3,5 @@ pygame
 noise
 dict
 PyYAML # yaml
+mlconjug # For language translation to English
 # The trailing newline is needed for the bash script

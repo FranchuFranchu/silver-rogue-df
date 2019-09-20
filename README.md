@@ -40,10 +40,10 @@ There are tiny numbers on the right if you don't want to count from the top
 The empty tiles are green, and have a number to get the low half of the position
 
 ## Credits
-[Tileset author, he hasn't provided any license](https://dwarffortresswiki.org/index.php/User:Alloy)
 
-[I'll assume it's MIT because of the wiki politics](https://dwarffortresswiki.org/index.php/User:Alloy)
+[12x12 author, he hasn't provided any license](https://dwarffortresswiki.org/index.php/User:Alloy)
+[8x12 author, he hasn't provided any license either](https://dwarffortresswiki.org/index.php/User:Andux)
 
-I assume this is not a "derivative work" of the tileset because you can change it if you want, correct me and i'll change the license
+[I'll assume they are MIT because of the wiki politics](https://dwarffortresswiki.org/index.php/User:Alloy)
 
 credits to me for everything else

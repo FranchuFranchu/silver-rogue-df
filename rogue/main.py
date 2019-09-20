@@ -5,11 +5,13 @@ from itertools import product
 from functools import partial
 from copy import deepcopy
 from pprint import pformat
+import sys
 
-import pygame, sys
+import pygame
 from pygame.locals import *
-from autoclass import autoclass
 import yaml
+from autoclass import autoclass
+
 import spritesheets
 import generate
 import nonblockingchinput
@@ -117,7 +119,6 @@ class MainGame(
     TranslationFeature
     ):
     def init(self):
-        pygame.display.init()
         self.init_vars()
         self.update_mode()
         self.graphics_init()
@@ -131,7 +132,8 @@ class MainGame(
                 wtiles.append(WorldTile(self, 'G:n',i,j))
 
         self.world = World(wtiles,seed = 1)
-        self.world[2,2].town = True
+        self.world[2, 3].site = generate.town.Town()
+        self.world[3, 2].site = generate.town.Town()
         self.player = Entity(self, '@', 0, 0, 0)
 
         self.regenerate_world_tile()
@@ -227,7 +229,17 @@ class MainGame(
             if game.direction != 5:
                 game.player.y -= game.tile_at_player.slope
         return game.tile_at_player
+    def run2(game):
 
+        clock = pygame.time.Clock()
+        game.char_notation_blit(0x3,1,1)
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+            pygame.display.update()
+            clock.tick(30)
     def run(game):
         # Variables for the loop
         clock = pygame.time.Clock()
@@ -343,7 +355,6 @@ class MainGame(
         return d
 
     def __setstate__(self, state):
-        pygame.display.init()
         self.__dict__ = state
         self.update_mode()
         self.graphics_init()

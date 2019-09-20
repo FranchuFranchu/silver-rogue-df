@@ -1,11 +1,17 @@
-from platform import system
 from os.path import expandvars
+from platform import system
+from re import search
+
 class VariableDeclarations:
     def init_vars(self):
         self.IS_FULLSCREEN = False
         
-        self.TILE_W = 12 # Tile size, in pixels
-        self.TILE_H = 12
+        self.TILESET_NAME = "8x12_Andux"
+        o = search(r"(\d+)x(\d+)_.+", self.TILESET_NAME)
+
+        self.TILE_W = int(o.group(2)) # Tile size, in pixels
+        self.TILE_H = int(o.group(1))
+
         self.CHAR_W = 92 # Screen size, in tiles
         self.CHAR_H = 52    
 
