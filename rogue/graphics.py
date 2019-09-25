@@ -19,10 +19,6 @@ class SelectionList(Widget):
         self.currselected = 0
         self.metadata = metadata
         self.pre_screen = game.screen.copy() # Lower layer of the screen
-        game.bind('W_%s' % name, 'PLUS', self.moveSelectionFoward)
-        game.bind('W_%s' % name, 'MINUS', self.moveSelectionBackward)
-        game.bind('W_%s' % name, 'RETURN', self.enterKey)
-        print(game.bindings)
 
     def display(self):
         self.b_view = self.game.curr_view

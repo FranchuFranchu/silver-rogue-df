@@ -61,8 +61,8 @@ class LookingFeature:
             game.talking_menu = metadata['self']
             game.curr_view = 'play'
             if game.talking_menu != 'exit':
-            	game.talking_list[game.talking_menu].display()
-            	return
+                game.talking_list[game.talking_menu].display()
+                return
 
 
         #game.announcements.append(game.entities[game.cursor_e.pos].entities[0].desc + ': Hi')

@@ -93,6 +93,7 @@ class VariableDeclarations:
             '*': {}
         }
 
+
         # Command line
         self.currcmd = ''
         self.timeSinceHeldBindingWasPressed = {

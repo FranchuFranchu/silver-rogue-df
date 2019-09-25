@@ -85,6 +85,44 @@ class HistoricalEntity:
 class Site:
     pass
 
+class Item:
+    def __init__(self, game, item_name):
+        self.game = game
+        self.name = item_name
+
+    @property
+    def volume(self):
+        return self._volume
+
+    @property
+    def translate(self):
+        return self.game._(self.item_name)
+    
+    
+
+class Inventory:
+    def __init__(self, max_volume):
+        self.max_volume = max_volume
+        self.items = []
+
+    @property
+    def used_volume(self):
+        v = 0
+        for i in self.items:
+            v += i.volume
+
+        return v
+    
+    def add(self, item: Item):
+        if item.volume + self.used_volume > max_volume:
+            return False
+
+        self.items.append(item)
+        return True
+
+    def remove(self, item: Item):
+        self.items.remove(item)
+
 @autoclass
 class BaseEntity:
     def __init__(self, char = ' ', x = 0, y = 0, z = 0, volume = 75, draw_index = 0, attrs = None, desc = ''):

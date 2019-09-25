@@ -27,6 +27,8 @@ from bind_utils import BindingFeature
 from screen_resizing import ScreenResizingFeature
 from graphics import SelectionList
 from translations import TranslationFeature
+from plugins import PluginFeature
+from logging_f import LoggingFeature
 
 # Import views
 from views.play import PlayViewTickFeature
@@ -90,8 +92,8 @@ class VideoResizeHandlerFeature:
     def handle_video_resize(game, event):
         game.SCREEN_H = event.h
         game.SCREEN_W = event.w
-        game.CHAR_H = int(game.SCREEN_H / game.TILE_H)
-        game.CHAR_W = int(game.SCREEN_W / game.TILE_W)
+        game.CHAR_H = int(game.SCREEN_H / game.TILE_W)
+        game.CHAR_W = int(game.SCREEN_W / game.TILE_H)
         videoResizeWasHappening = True
         timeSinceVideoResize = 0
         game.zindex_buf = [[-100 for _ in range(game.maph)] for _ in range(game.mapw)]
@@ -116,14 +118,22 @@ class MainGame(
     GameToStringFeature,
     AnnouncementFeature,
     DrawMapFeature,
-    TranslationFeature
+    TranslationFeature,
+    PluginFeature,
+    LoggingFeature
     ):
     def init(self):
+        # Initialize features
         self.init_vars()
         self.update_mode()
-        self.graphics_init()
+        self.init_graphics()
+        self.init_data()
+        self.init_arguments()
+        self.init_logging()
         self.load_locales(self.LANG)
         self.load_talking_behaviour()
+        self.get_file("file.txt")
+        self.generate_example_plugin()
         # Create world tile and game.entities
 
         wtiles = []
@@ -357,7 +367,7 @@ class MainGame(
     def __setstate__(self, state):
         self.__dict__ = state
         self.update_mode()
-        self.graphics_init()
+        self.init_graphics()
         return self.__dict__
 if __name__ == '__main__':
     theMainGame = MainGame()

@@ -7,7 +7,7 @@ class GraphicsFeature:
     def g_update(game):
         pygame.display.update()
         
-    def graphics_init(game):
+    def init_graphics(game):
         pygame.display.init()
         game.sheet = spritesheets.spritesheet('../resource/fonts/%s.png' % game.TILESET_NAME)
 

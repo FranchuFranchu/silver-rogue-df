@@ -1,0 +1,5 @@
+test_item:
+  lang-en: Test Item
+  volume: 300 # Volume is measured in ml. A tile is 3000 liters (3 cubic meters)
+  stack: 64
+  starting: True
