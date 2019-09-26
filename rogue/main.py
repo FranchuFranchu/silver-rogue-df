@@ -19,16 +19,18 @@ import nonblockingchinput
 # Import classes
 from game_classes import BaseMapTile, Map, BaseEntity
 from drawable_game_classes import MapTile, World, WorldTile, Entity
+from graphics import SelectionList
+
+# Import graphics
+from pygame_g import GraphicsFeature
 
 # Import features
-from variable_declarations import VariableDeclarations
-from pygame_g import GraphicsFeature
-from bind_utils import BindingFeature
-from screen_resizing import ScreenResizingFeature
-from graphics import SelectionList
-from translations import TranslationFeature
-from plugins import PluginFeature
-from logging_f import LoggingFeature
+from features.variable_declarations import VariableDeclarations
+from features.bind_utils import BindingFeature
+from features.screen_resizing import ScreenResizingFeature
+from features.translations import TranslationFeature
+from features.plugins import PluginFeature
+from features.logging_f import LoggingFeature
 
 # Import views
 from views.play import PlayViewTickFeature
